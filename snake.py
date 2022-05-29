@@ -81,16 +81,14 @@ while True:
 	wn.update()
 
 	# Colisiones bordes
-	if cabeza.xcor() > 280 or cabeza.xcor() < -280 or cabeza.ycor() > 280 or cabeza.ycor() < -280:
-		time.sleep(1)
-		cabeza.goto(0,0)
-		cabeza.direction = "stop"
-
-		#Esconder los segmentos
-		for segmento in segmentos:
-			segmento.goto(1000,1000) # converti un indice en objeto??
-		#limpiar lista de segmentos
-		segmentos.clear()
+	if cabeza.xcor() > 280:
+		cabeza.setx(-280)
+	if cabeza.xcor() < -280:
+		cabeza.setx(280) 
+	if cabeza.ycor() > 280:
+		cabeza.sety(-280)
+	if cabeza.ycor() < -280:
+		cabeza.sety(280)
 
 	# Colisiones comida
 
