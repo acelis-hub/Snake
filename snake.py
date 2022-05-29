@@ -1,7 +1,7 @@
 import turtle
 import time
 
-posponer = 0.5 # segundos
+posponer = 0.1 # segundos
 
 #creacion de ventana
 
@@ -19,7 +19,19 @@ cabeza.shape("square") # forma de cuadrado
 cabeza.color("red")
 cabeza.penup() # quitar rastro
 cabeza.goto(0,0) # posicion inicial
-cabeza.direction = "down"
+cabeza.direction = "stop"
+
+#Direcciones variables 
+
+def arriba():
+	cabeza.direction = "up"
+def abajo():
+	cabeza.direction = "down"
+def izquierda():
+	cabeza.direction = "left"
+def derecha():
+	cabeza.direction = "right"
+
 
 #Funciones de movimiento
 
@@ -39,6 +51,14 @@ def mov():
 	if cabeza.direction == "right":
 		x = cabeza.xcor()
 		cabeza.setx(x + 20)
+
+#Teclado
+
+wn.listen()
+wn.onkeypress(arriba, "Up") # ejecuta la funcion "arriba" si se pulsa la tecla correspondiente
+wn.onkeypress(abajo, "Down")
+wn.onkeypress(izquierda, "Left")
+wn.onkeypress(derecha, "Right")
 
 #los juegos corren en bucles
 
