@@ -124,7 +124,24 @@ while True:
 
 		texto.clear()
 		texto.write("Score:  {}     High Score: {}".format(score,high_score)
-									, align = "center", font = ("Courier", 24, "normal"))
+										, align = "center", font = ("Courier", 24, "normal"))
+	# colision con el cuerpo
+	for segmento in segmentos:
+		if segmento.distance(cabeza) < 20:
+			time.sleep(1)
+			cabeza.goto(0,0)
+			cabeza.direction = "stop"
+
+			#esconder los segmentos
+			for segmento in segmentos:
+				segmento.goto(1000,1000)
+
+			segmentos.clear()
+
+			score = 0
+			texto.clear()
+			texto.write("Score:  {}     High Score: {}".format(score,high_score)
+										, align = "center", font = ("Courier", 24, "normal"))
 
 	# Mover el cuerpo de la serpiente
 
