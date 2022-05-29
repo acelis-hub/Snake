@@ -1,7 +1,9 @@
 import turtle
 
-pluma = turtle.Turtle()
+#creacion de ventana
 
-for i in range(0,4):
-	pluma.forward(100)
-	pluma.left(90)
+wn = turtle.Screen() # objeto ventana
+wn.title("Snake Game") # titulo 
+wn.bgcolor("black") , # fondo 
+wn.setup(width = 600, height = 600) # dimenciones
+wn.tracer(0) # algo placentero
