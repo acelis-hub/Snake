@@ -31,6 +31,11 @@ comida.color("green")
 comida.penup() # quitar rastro
 comida.goto(0,100) # posicion inicial
 
+# Cuerpo de la serpiente
+
+segmentos=[]
+
+
 #Direcciones variables 
 
 def arriba():
@@ -79,6 +84,26 @@ while True:
 		x = random.randint(-280,280)
 		y = random.randint(-280,280)
 		comida.goto(x,y)
+
+		nuevo_segmento = turtle.Turtle() # objeto Turtle
+		nuevo_segmento.speed(0)
+		nuevo_segmento.shape("square") # forma de cuadrado
+		nuevo_segmento.color("blue")
+		nuevo_segmento.penup() # quitar rastro
+		segmentos.append(nuevo_segmento)
+
+	# Mover el cuerpo de la serpiente
+
+	totalSeg = len(segmentos) # cantidad de segmentos
+	for index in range(totalSeg -1, 0, -1): # iteracion desde totalSeg -1, hasta 0
+		x = segmentos[index - 1].xcor()
+		y = segmentos[index - 1].ycor()
+		segmentos[index].goto(x,y)
+
+	if totalSeg>0:
+		x = cabeza.xcor()
+		y = cabeza.ycor()
+		segmentos[0].goto(x,y)
 
 	mov()
 	time.sleep(posponer)
