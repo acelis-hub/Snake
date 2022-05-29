@@ -3,6 +3,8 @@ import time
 import random
 
 posponer = 0.1 # segundos
+score = 0
+high_score = 0
 
 #creacion de ventana
 
@@ -34,6 +36,15 @@ comida.goto(0,100) # posicion inicial
 # Cuerpo de la serpiente
 
 segmentos=[]
+
+#Texto
+texto = turtle.Turtle()
+texto.speed(0)
+texto.color("black")
+texto.penup()
+texto.hideturtle()
+texto.goto(0,260)
+texto.write("Score:  0     High Score: 0", align = "center", font = ("Courier", 24, "normal"))
 
 
 #Direcciones variables 
@@ -103,6 +114,17 @@ while True:
 		nuevo_segmento.color("blue")
 		nuevo_segmento.penup() # quitar rastro
 		segmentos.append(nuevo_segmento) # en una lista puedo guardar objetos, que putas
+
+		# aumenta marcador
+
+		score+=10
+
+		if score > high_score:
+			high_score=score
+
+		texto.clear()
+		texto.write("Score:  {}     High Score: {}".format(score,high_score)
+									, align = "center", font = ("Courier", 24, "normal"))
 
 	# Mover el cuerpo de la serpiente
 
