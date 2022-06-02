@@ -1,6 +1,7 @@
 import turtle
 import time
 import random
+import numpy as np
 
 posponer = 0.1 # segundos
 score = 0
@@ -8,10 +9,10 @@ high_score = 0
 
 #creacion de ventana
 
-wn = turtle.Screen() # objeto ventana
-wn.title("Snake Game") # titulo 
-wn.bgcolor("white") , # fondo 
-wn.setup(width = 600, height = 600) # dimenciones en pixeles
+wn = turtle.Screen() # Objeto ventana
+wn.title("Snake Game") # Titulo 
+wn.bgcolor("black") , # Fondo 
+wn.setup(width = 3000, height = 3000) # Dimensiones en pixeles
 wn.tracer(0) # algo placentero
 
 # Cabeza de serpiente
@@ -19,7 +20,7 @@ wn.tracer(0) # algo placentero
 cabeza = turtle.Turtle() # objeto Turtle
 cabeza.speed(0)
 cabeza.shape("square") # forma de cuadrado
-cabeza.color("red")
+cabeza.color("green")
 cabeza.penup() # quitar rastro
 cabeza.goto(0,0) # posicion inicial
 cabeza.direction = "stop"
@@ -28,8 +29,8 @@ cabeza.direction = "stop"
 
 comida = turtle.Turtle() # objeto Turtle
 comida.speed(0)
-comida.shape("circle") # forma de cuadrado
-comida.color("green")
+comida.shape("square") # forma de cuadrado
+comida.color("red")
 comida.penup() # quitar rastro
 comida.goto(0,100) # posicion inicial
 
@@ -40,7 +41,7 @@ segmentos=[]
 #Texto
 texto = turtle.Turtle()
 texto.speed(0)
-texto.color("black")
+texto.color("white")
 texto.penup()
 texto.hideturtle()
 texto.goto(0,260)
@@ -111,13 +112,13 @@ while True:
 		nuevo_segmento = turtle.Turtle() # objeto Turtle
 		nuevo_segmento.speed(0)
 		nuevo_segmento.shape("square") # forma de cuadrado
-		nuevo_segmento.color("blue")
+		nuevo_segmento.color("gray")
 		nuevo_segmento.penup() # quitar rastro
 		segmentos.append(nuevo_segmento) # en una lista puedo guardar objetos, que putas
 
 		# aumenta marcador
 
-		score+=10
+		score+=1
 
 		if score > high_score:
 			high_score=score
