@@ -1,7 +1,10 @@
 import turtle
 import time
 import random
-import numpy as np
+
+import os
+
+ClearConsole = lambda: os.system("cls" if os.name in ("nt", "dos") else "clear")
 
 posponer = 0.1 # segundos
 score = 0
@@ -9,10 +12,10 @@ high_score = 0
 
 #creacion de ventana
 
-wn = turtle.Screen() # Objeto ventana
-wn.title("Snake Game") # Titulo 
-wn.bgcolor("black") , # Fondo 
-wn.setup(width = 3000, height = 3000) # Dimensiones en pixeles
+wn = turtle.Screen() # objeto ventana
+wn.title("Snake Game") # titulo 
+wn.bgcolor("black") , # fondo 
+wn.setup(width = 600, height = 600) # dimenciones en pixeles
 wn.tracer(0) # algo placentero
 
 # Cabeza de serpiente
@@ -29,7 +32,7 @@ cabeza.direction = "stop"
 
 comida = turtle.Turtle() # objeto Turtle
 comida.speed(0)
-comida.shape("square") # forma de cuadrado
+comida.shape("circle") # forma de cuadrado
 comida.color("red")
 comida.penup() # quitar rastro
 comida.goto(0,100) # posicion inicial
@@ -87,10 +90,77 @@ wn.onkeypress(abajo, "Down")
 wn.onkeypress(izquierda, "Left")
 wn.onkeypress(derecha, "Right")
 
+def inicializar_matriz(n):
+
+	# matriz estado de juego
+	game_state = list()
+
+	# por cada fila (total de 30) creo una columna con 30 espacios
+	for i in range(n):
+
+		row = list()
+
+		for j in range(n):
+
+			row.append("o")
+		
+		game_state.append(row)
+	
+	return game_state
+
+# SÍMBOLOS PARA LOS ELEMENTOS DEL JUEGO
+
+CAB = "0"  # cabeza de la serpiente
+CUE = "="  # cuerpo de la serpiente
+COM = "%"  # comida
+
+# Función que me devuelve el índice de la matriz dependiendo las coordenadas
+def in_matriz(obj):
+	return (int((obj.ycor() + 280) / 20), int((obj.xcor() + 280) / 20))
+
+# Función que crea la matriz que representa el estado del juego
+def discretizar_mundo(cabeza, snake, comida):
+
+	game_state = inicializar_matriz(30)
+
+	cabeza_x, cabeza_y = in_matriz(cabeza)
+	comida_x, comida_y = in_matriz(comida)
+
+	game_state[cabeza_x][cabeza_y] = CAB
+	game_state[comida_x][comida_y] = COM
+
+	# hago lo mismo para cada segmento del cuerpo 
+	for segmento in snake:
+
+		segmento_x, segmento_y = in_matriz(segmento)
+
+		game_state[segmento_x][segmento_y] = CUE
+
+	return reversed(game_state)
+
+def print_game_state(GameState):
+
+	for row in GameState:
+		
+		for element in row:
+
+			print(element, end = "")
+		
+		print("")
+
+
 #los juegos corren en bucles
 
 while True:
+
+	# Borramos la consola para dibujar el mapa
+	ClearConsole()
+
 	wn.update()
+
+	game_state = discretizar_mundo(cabeza, segmentos, comida)
+	print_game_state(game_state)
+
 
 	# Colisiones bordes
 	if cabeza.xcor() > 280:
@@ -112,13 +182,13 @@ while True:
 		nuevo_segmento = turtle.Turtle() # objeto Turtle
 		nuevo_segmento.speed(0)
 		nuevo_segmento.shape("square") # forma de cuadrado
-		nuevo_segmento.color("gray")
+		nuevo_segmento.color("blue")
 		nuevo_segmento.penup() # quitar rastro
 		segmentos.append(nuevo_segmento) # en una lista puedo guardar objetos, que putas
 
 		# aumenta marcador
 
-		score+=1
+		score+=10
 
 		if score > high_score:
 			high_score=score
@@ -158,4 +228,5 @@ while True:
 		segmentos[0].goto(x,y)
 
 	mov()
+
 	time.sleep(posponer)
