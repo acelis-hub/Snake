@@ -3,6 +3,7 @@ import time
 import random
 
 import os
+from util import Nodo, PathFinder
 
 # ---------- # PREPARATIVOS PARA EL CÓDIGO # -------------- #
 
@@ -96,6 +97,13 @@ wn.onkeypress(derecha, "Right")
 
 # -- # Funciones de discretización # -- #
 
+# SÍMBOLOS PARA LOS ELEMENTOS DEL JUEGO
+
+CAB = "0"  # cabeza de la serpiente
+CUE = "="  # cuerpo de la serpiente
+COM = "%"  # comida
+EMP = "-"
+
 # Función que devuelve una matriz del tamaño del tablero de juego
 def inicializar_matriz(n):
 
@@ -109,17 +117,12 @@ def inicializar_matriz(n):
 
 		for j in range(n):
 
-			row.append("o")
+			row.append(EMP)
 		
 		game_state.append(row)
 	
 	return game_state
 
-# SÍMBOLOS PARA LOS ELEMENTOS DEL JUEGO
-
-CAB = "0"  # cabeza de la serpiente
-CUE = "="  # cuerpo de la serpiente
-COM = "%"  # comida
 
 # Función que me devuelve el índice de la matriz dependiendo las coordenadas
 def in_matriz(obj):
@@ -160,6 +163,11 @@ def print_game_state(GameState):
 
 # -------------- # IMPLEMENTACIÓN IA # ----------------------- #
 
+class 
+
+def IA(GameState, cab_coords, com_coords):
+
+	while True:
 
 
 # -------------- # MAIN DEL JUEGO # ------------------------- #
