@@ -4,14 +4,22 @@ import random
 
 import os
 
+# ---------- # PREPARATIVOS PARA EL CÓDIGO # -------------- #
+
+
+# -- # Funciones, objetos y herramientas # -- #
+
+# Función que limpia la consola
 ClearConsole = lambda: os.system("cls" if os.name in ("nt", "dos") else "clear")
 
 posponer = 0.1 # segundos
 score = 0
 high_score = 0
 
-#creacion de ventana
 
+# -- # Preparación de la API gráfica # -- #
+
+#creacion de ventana
 wn = turtle.Screen() # objeto ventana
 wn.title("Snake Game") # titulo 
 wn.bgcolor("black") , # fondo 
@@ -19,7 +27,6 @@ wn.setup(width = 600, height = 600) # dimenciones en pixeles
 wn.tracer(0) # algo placentero
 
 # Cabeza de serpiente
-
 cabeza = turtle.Turtle() # objeto Turtle
 cabeza.speed(0)
 cabeza.shape("square") # forma de cuadrado
@@ -29,7 +36,6 @@ cabeza.goto(0,0) # posicion inicial
 cabeza.direction = "stop"
 
 # Comida de serpiente
-
 comida = turtle.Turtle() # objeto Turtle
 comida.speed(0)
 comida.shape("circle") # forma de cuadrado
@@ -38,10 +44,9 @@ comida.penup() # quitar rastro
 comida.goto(0,100) # posicion inicial
 
 # Cuerpo de la serpiente
-
 segmentos=[]
 
-#Texto
+# Texto
 texto = turtle.Turtle()
 texto.speed(0)
 texto.color("white")
@@ -51,8 +56,9 @@ texto.goto(0,260)
 texto.write("Score:  0     High Score: 0", align = "center", font = ("Courier", 24, "normal"))
 
 
-#Direcciones variables 
+# -- # Funciones del juego # -- #
 
+#Direcciones variables 
 def arriba():
 	cabeza.direction = "up"
 def abajo():
@@ -64,7 +70,6 @@ def derecha():
 
 
 #Funciones de movimiento
-
 def mov():
 	if cabeza.direction == "up":
 		y = cabeza.ycor()
@@ -82,20 +87,22 @@ def mov():
 		x = cabeza.xcor()
 		cabeza.setx(x + 20)
 
-#Teclado
-
+# Teclado
 wn.listen()
 wn.onkeypress(arriba, "Up") # ejecuta la funcion "arriba" si se pulsa la tecla correspondiente
 wn.onkeypress(abajo, "Down")
 wn.onkeypress(izquierda, "Left")
 wn.onkeypress(derecha, "Right")
 
+# -- # Funciones de discretización # -- #
+
+# Función que devuelve una matriz del tamaño del tablero de juego
 def inicializar_matriz(n):
 
 	# matriz estado de juego
 	game_state = list()
 
-	# por cada fila (total de 30) creo una columna con 30 espacios
+	# por cada fila (total de n) creo una columna con n espacios
 	for i in range(n):
 
 		row = list()
@@ -118,7 +125,8 @@ COM = "%"  # comida
 def in_matriz(obj):
 	return (int((obj.ycor() + 280) / 20), int((obj.xcor() + 280) / 20))
 
-# Función que crea la matriz que representa el estado del juego
+# Función que crea la matriz que representa el estado del juego,
+# Devuelve la matriz estado de juego y las coordenadas de la cabeza y la comida
 def discretizar_mundo(cabeza, snake, comida):
 
 	game_state = inicializar_matriz(30)
@@ -136,21 +144,27 @@ def discretizar_mundo(cabeza, snake, comida):
 
 		game_state[segmento_x][segmento_y] = CUE
 
-	return reversed(game_state)
+	return (reversed(game_state), (cabeza_x, cabeza_y), (comida_x, comida_y))
 
+# Función que imprime a consola el estado del juego
 def print_game_state(GameState):
 
 	for row in GameState:
 		
 		for element in row:
 
-			print(element, end = "")
+			print(element, end = " ")
 		
 		print("")
 
 
-#los juegos corren en bucles
+# -------------- # IMPLEMENTACIÓN IA # ----------------------- #
 
+
+
+# -------------- # MAIN DEL JUEGO # ------------------------- #
+
+#los juegos corren en bucles
 while True:
 
 	# Borramos la consola para dibujar el mapa
@@ -158,7 +172,8 @@ while True:
 
 	wn.update()
 
-	game_state = discretizar_mundo(cabeza, segmentos, comida)
+	# Pedimos la matriz estado de juego junto con las coordenadas de la cabeza 
+	game_state, cab_coors, com_coors = discretizar_mundo(cabeza, segmentos, comida)
 	print_game_state(game_state)
 
 
@@ -175,8 +190,11 @@ while True:
 	# Colisiones comida
 
 	if cabeza.distance(comida) < 20: #tamaño de los objetos 20x20p
-		x = random.randint(-280,280)
-		y = random.randint(-280,280)
+
+		posible_starts = range(-280, 280, 20)
+
+		x = random.choice(posible_starts)
+		y = random.choice(posible_starts)
 		comida.goto(x,y)
 
 		nuevo_segmento = turtle.Turtle() # objeto Turtle
