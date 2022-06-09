@@ -1,6 +1,6 @@
 class Nodo():
-    def __init__(self, state, parent):
-        self.state = state
+    def __init__(self, coords, parent):
+        self.coords = coords
         self.parent = parent
         
 class PathFinder():

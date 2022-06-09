@@ -147,7 +147,7 @@ def discretizar_mundo(cabeza, snake, comida):
 
 		game_state[segmento_x][segmento_y] = CUE
 
-	return (reversed(game_state), (cabeza_x, cabeza_y), (comida_x, comida_y))
+	return (game_state[::-1], (cabeza_x, cabeza_y), (comida_x, comida_y))
 
 # Función que imprime a consola el estado del juego
 def print_game_state(GameState):
@@ -163,12 +163,92 @@ def print_game_state(GameState):
 
 # -------------- # IMPLEMENTACIÓN IA # ----------------------- #
 
-class 
+# Función que me devuelve los posibles movimientos dada una celda como cabeza
+def cell_neighbors(GameState, node, explored):
 
-def IA(GameState, cab_coords, com_coords):
+	neighbors = list()
 
-	while True:
+	node = node[::-1]
 
+	instant_cells = [(node[0] - 1, node[1]), (node[0] + 1, node[1]), (node[0], node[1] + 1), (node[0], node[1] - 1)]
+
+	for cell in instant_cells:
+
+		if (GameState[cell[0]][cell[1]] == EMP) and (cell not in explored):
+			neighbors.append(cell)
+	
+	return neighbors
+
+# Función que implementa la el algoritmo de Djistkra (no sé cómo se escribe xD)
+def path(GameState, cab_coords, com_coords):
+
+	start = Nodo(cab_coords, None)	# EL nodo inicial es la cabeza del snake
+	goal = com_coords               # La meta es la celda que contiene la comida
+
+	pf = PathFinder()	# pf abreviación de PathFinder
+	pf.add(start)		# Agregamos el nodo inicial al PathFinder
+
+
+	# Se empieza la búsqueda del path
+	while (True):
+		explored = set()    # Set en donde guardaremos las celdas ya explorados
+							# para optimizar la búsqueda
+
+		# Si no hay nada en el path finder devolvemos None
+		if (pf.empty()):
+			return None
+
+		# Tomamos un nodo de la fila
+		node = pf.remove()
+
+		# Si el nodo el la meta, devolvemos el path que llegó a él
+		if (node.coords == goal):
+			
+			path = list()
+
+			# Construimos el path
+			while (node.parent != None):
+
+				path.append(node.coords)
+				node = node.parent
+
+			print("Find path")
+			print(f"head: {cab_coords}")
+			return path[::-1]
+		
+		# Si no hemos llegado a la meta, expandimos los path
+		else:
+			
+			explored.add(node.coords)
+
+			# Exploramos cada una de los posibles caminos por turno
+			for cell in cell_neighbors(GameState, node.coords, explored):
+				
+				# Agregamos al PathFinder ese nodo para que sea explorado
+				# En siguientes iteraciones
+				pf.add(Nodo(cell, node))
+
+# Función que devuelve el movimiento a seguir por el snaje
+def IA_mov(cab_coords, cell_to_move):
+
+	x_mov = cell_to_move[0] - cab_coords[0]
+	y_mov = cell_to_move[1] - cab_coords[1]
+
+	print(f"x move: {x_mov}")
+	print(f"y move: {y_mov}")
+
+	direction = None
+
+	if (x_mov == 1):
+		direction = "right"
+	if (x_mov == -1): 
+		direction = "left"
+	if (y_mov == -1):
+		direction = "down"
+	if (y_mov == 1):
+		direction = "up"
+
+	return direction
 
 # -------------- # MAIN DEL JUEGO # ------------------------- #
 
@@ -253,6 +333,15 @@ while True:
 		y = cabeza.ycor()
 		segmentos[0].goto(x,y)
 
+
+	path_to_take = path(game_state, cab_coors, com_coors)
+
+	print(f"path found: {path_to_take}")
+	movToMake = IA_mov(cab_coors, path_to_take[0])
+	cabeza.direction = movToMake
+
+	print(f"Move to make: {movToMake}")
+	input()
 	mov()
 
 	time.sleep(posponer)
