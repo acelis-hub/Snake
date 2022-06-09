@@ -23,9 +23,10 @@ high_score = 0
 wn = turtle.Screen() # objeto ventana
 wn.title("Snake Game") # titulo 
 wn.bgcolor("black") , # fondo 
-wn.setup(width = 600, height = 600) # dimenciones en pixeles
+wn.setup(width = 1280, height = 720) # dimenciones en pixeles
 wn.tracer(0) # algo placentero
 
+wn.screensize(400,400)
 # Cabeza de serpiente
 cabeza = turtle.Turtle() # objeto Turtle
 cabeza.speed(0)
@@ -38,7 +39,7 @@ cabeza.direction = "stop"
 # Comida de serpiente
 comida = turtle.Turtle() # objeto Turtle
 comida.speed(0)
-comida.shape("circle") # forma de cuadrado
+comida.shape("circle") # forma de circulo
 comida.color("red")
 comida.penup() # quitar rastro
 comida.goto(0,100) # posicion inicial
@@ -96,6 +97,10 @@ wn.onkeypress(derecha, "Right")
 
 # -- # Funciones de discretización # -- #
 
+
+
+
+
 # Función que devuelve una matriz del tamaño del tablero de juego
 def inicializar_matriz(n):
 
@@ -106,7 +111,7 @@ def inicializar_matriz(n):
 	for i in range(n):
 
 		row = list()
-
+        
 		for j in range(n):
 
 			row.append("o")
@@ -115,9 +120,12 @@ def inicializar_matriz(n):
 	
 	return game_state
 
+
+
+
 # SÍMBOLOS PARA LOS ELEMENTOS DEL JUEGO
 
-CAB = "0"  # cabeza de la serpiente
+CAB = "0"  # cabeza de la serpienwn.forward(longitud)
 CUE = "="  # cuerpo de la serpiente
 COM = "%"  # comida
 
@@ -125,11 +133,14 @@ COM = "%"  # comida
 def in_matriz(obj):
 	return (int((obj.ycor() + 280) / 20), int((obj.xcor() + 280) / 20))
 
+
+tamaño = 30 #Variable global para definir el tamaño de la matriz
+
 # Función que crea la matriz que representa el estado del juego,
 # Devuelve la matriz estado de juego y las coordenadas de la cabeza y la comida
 def discretizar_mundo(cabeza, snake, comida):
 
-	game_state = inicializar_matriz(30)
+	game_state = inicializar_matriz(tamaño) #Tamaño de la matriz (Tamaño del area donde la serpiente se moverá)
 
 	cabeza_x, cabeza_y = in_matriz(cabeza)
 	comida_x, comida_y = in_matriz(comida)
@@ -163,6 +174,26 @@ def print_game_state(GameState):
 
 
 # -------------- # MAIN DEL JUEGO # ------------------------- #
+
+
+
+#
+cuadrado = turtle.Turtle() #Objeto cuadrado para la grilla
+
+size = 20 #tamaño del cuadrado
+for x in range(-300//size, 300//size):
+    for y in range(-300//size, 300//size):
+        turtle.up()
+        turtle.goto(x * size - 10, y * size - 10)
+        turtle.down()
+        turtle.color("white")
+        for sides in range(4):
+            turtle.forward(size)
+            turtle.left(90)
+turtle.update()
+
+
+
 
 #los juegos corren en bucles
 while True:
@@ -206,7 +237,7 @@ while True:
 
 		# aumenta marcador
 
-		score+=10
+		score+=1
 
 		if score > high_score:
 			high_score=score
