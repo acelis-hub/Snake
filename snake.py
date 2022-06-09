@@ -183,13 +183,15 @@ cuadrado = turtle.Turtle() #Objeto cuadrado para la grilla
 size = 20 #tamaño del cuadrado
 for x in range(-300//size, 320//size):
     for y in range(-300//size, 320//size):
-        turtle.up()
-        turtle.goto(x * size - 10, y * size - 10)
-        turtle.down()
-        turtle.color("gray")
+        cuadrado.up()
+        cuadrado.goto(x * size - 10, y * size - 10)
+        cuadrado.down()
+        cuadrado.color("gray")
         for sides in range(4):
-            turtle.forward(size)
-            turtle.left(90)
+            cuadrado.forward(size)
+            cuadrado.left(90)
+        cuadrado.hideturtle()
+
 turtle.update()
 
 
