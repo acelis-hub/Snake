@@ -168,7 +168,7 @@ def cell_neighbors(GameState, node, explored):
 
 	neighbors = list()
 
-	node = node[::-1]
+	# node = node[::-1]
 
 	instant_cells = [(node[0] - 1, node[1]), (node[0] + 1, node[1]), (node[0], node[1] + 1), (node[0], node[1] - 1)]
 
