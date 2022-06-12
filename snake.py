@@ -24,9 +24,10 @@ high_score = 0
 wn = turtle.Screen() # objeto ventana
 wn.title("Snake Game") # titulo 
 wn.bgcolor("black") , # fondo 
-wn.setup(width = 600, height = 600) # dimenciones en pixeles
+wn.setup(width = 1280, height = 720) # dimenciones en pixeles
 wn.tracer(0) # algo placentero
 
+wn.screensize(400,400)
 # Cabeza de serpiente
 cabeza = turtle.Turtle() # objeto Turtle
 cabeza.speed(0)
@@ -39,7 +40,7 @@ cabeza.direction = "stop"
 # Comida de serpiente
 comida = turtle.Turtle() # objeto Turtle
 comida.speed(0)
-comida.shape("circle") # forma de cuadrado
+comida.shape("circle") # forma de circulo
 comida.color("red")
 comida.penup() # quitar rastro
 comida.goto(0,100) # posicion inicial
@@ -125,7 +126,7 @@ def inicializar_matriz(n):
 	for i in range(n):
 
 		row = list()
-
+        
 		for j in range(n):
 
 			row.append(EMP)
@@ -134,16 +135,18 @@ def inicializar_matriz(n):
 	
 	return game_state
 
-
 # Función que me devuelve el índice de la matriz dependiendo las coordenadas
 def in_matriz(obj):
 	return (int((obj.ycor() + 300) / 20) - 1, int((obj.xcor() + 300) / 20) - 1)
+
+
+tamaño = 30 #Variable global para definir el tamaño de la matriz
 
 # Función que crea la matriz que representa el estado del juego,
 # Devuelve la matriz estado de juego y las coordenadas de la cabeza y la comida
 def discretizar_mundo(cabeza, snake, comida):
 
-	game_state = inicializar_matriz(30)
+	game_state = inicializar_matriz(tamaño) #Tamaño de la matriz (Tamaño del area donde la serpiente se moverá)
 
 	cabeza_x, cabeza_y = in_matriz(cabeza)
 	comida_x, comida_y = in_matriz(comida)
@@ -280,6 +283,22 @@ def IA(game_state, cab_coors, com_coors, cabeza):
 	input()
 
 # -------------- # MAIN DEL JUEGO # ------------------------- #
+
+cuadrado = turtle.Turtle() #Objeto cuadrado para la grilla
+
+size = 20 #tamaño del cuadrado
+for x in range(-300//size, 320//size):
+    for y in range(-300//size, 320//size):
+        cuadrado.up()
+        cuadrado.goto(x * size - 10, y * size - 10)
+        cuadrado.down()
+        cuadrado.color("gray")
+        for sides in range(4):
+            cuadrado.forward(size)
+            cuadrado.left(90)
+        cuadrado.hideturtle()
+
+turtle.update()
 
 #los juegos corren en bucles
 while True:
