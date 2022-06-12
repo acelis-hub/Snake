@@ -174,10 +174,17 @@ def discretizar_mundo(cabeza, snake, comida):
 	# hago lo mismo para cada segmento del cuerpo 
 	for segmento in snake:
 
-		if (segmento.xcor == cabeza.xcor) and (segmento.ycor == cabeza.ycor):
+		segmento_coords = in_matriz(segmento)
+
+		if (segmento_coords[0] == cabeza_x) and (segmento_coords[1] == cabeza_y):
 			continue
 
-		segmento_x, segmento_y = in_matriz(segmento)
+		if (segmento_coords[0] > 29):
+			segmento_x, segmento_y = (29, segmento_coords[1])
+		elif (segmento_coords[1] > 29):
+			segmento_x, segmento_y = (segmento_coords[0], 29)
+		else:
+			segmento_x, segmento_y = segmento_coords
 
 		game_state[segmento_x][segmento_y] = CUE
 
@@ -322,21 +329,24 @@ turtle.update()
 #los juegos corren en bucles
 while True:
 
-	# Colisiones bordes
-	if cabeza.xcor() > mp - size:
-		cabeza.setx(-mp)
-	if cabeza.xcor() < -mp:
-		cabeza.setx(mp - size) 
-	if cabeza.ycor() > mp - size:
-		cabeza.sety(-mp)
-	if cabeza.ycor() < -mp:
-		cabeza.sety(mp - size)
-
 	wn.update()
-
+	
 	if (not PAUSE):
+
+
 		ClearConsole()
 
+		# Colisiones bordes
+		if cabeza.xcor() > mp - size:
+			cabeza.setx(-mp)
+		if cabeza.xcor() < -mp:
+			cabeza.setx(mp - size) 
+		if cabeza.ycor() > mp - size:
+			cabeza.sety(-mp)
+		if cabeza.ycor() < -mp + size:
+			cabeza.sety(mp)
+
+		wn.update()
 
 		# Colisiones comida
 
@@ -357,7 +367,7 @@ while True:
 
 			# aumenta marcador
 
-			score+=10
+			score+=1
 
 			if score > high_score:
 				high_score=score
@@ -383,7 +393,6 @@ while True:
 				texto.write("Score:  {}     High Score: {}".format(score,high_score)
 											, align = "center", font = ("Courier", 24, "normal"))
 
-		mov()
 
 		time.sleep(posponer)
 
@@ -398,6 +407,8 @@ while True:
 			y = cabeza.ycor()
 			segmentos[0].goto(x,y)
 		
+		mov()
+
 		# Pedimos la matriz estado de juego junto con las coordenadas de la cabeza 
 		game_state, cab_coors, com_coors = discretizar_mundo(cabeza, segmentos, comida)
 		print_game_state(game_state)
