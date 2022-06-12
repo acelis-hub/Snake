@@ -59,6 +59,8 @@ texto.write("Score:  0     High Score: 0", align = "center", font = ("Courier", 
 
 # -- # Funciones del juego # -- #
 
+PAUSE = False
+
 #Direcciones variables 
 def arriba():
 	cabeza.direction = "up"
@@ -68,6 +70,14 @@ def izquierda():
 	cabeza.direction = "left"
 def derecha():
 	cabeza.direction = "right"
+def espacio():
+
+	global PAUSE
+
+	if (PAUSE):
+		PAUSE = False
+	else:
+		PAUSE = True
 
 
 #Funciones de movimiento
@@ -94,6 +104,7 @@ wn.onkeypress(arriba, "Up") # ejecuta la funcion "arriba" si se pulsa la tecla c
 wn.onkeypress(abajo, "Down")
 wn.onkeypress(izquierda, "Left")
 wn.onkeypress(derecha, "Right")
+wn.onkey(espacio, "space")
 
 # -- # Funciones de discretización # -- #
 
@@ -126,7 +137,7 @@ def inicializar_matriz(n):
 
 # Función que me devuelve el índice de la matriz dependiendo las coordenadas
 def in_matriz(obj):
-	return (int((obj.ycor() + 280) / 20), int((obj.xcor() + 280) / 20))
+	return (int((obj.ycor() + 300) / 20) - 1, int((obj.xcor() + 300) / 20) - 1)
 
 # Función que crea la matriz que representa el estado del juego,
 # Devuelve la matriz estado de juego y las coordenadas de la cabeza y la comida
@@ -137,11 +148,17 @@ def discretizar_mundo(cabeza, snake, comida):
 	cabeza_x, cabeza_y = in_matriz(cabeza)
 	comida_x, comida_y = in_matriz(comida)
 
+	print(f"Cabeza coords: {cabeza_x, cabeza_y}")
+	print(f"Comida coords: {comida_x, comida_y}")
+
 	game_state[cabeza_x][cabeza_y] = CAB
 	game_state[comida_x][comida_y] = COM
 
 	# hago lo mismo para cada segmento del cuerpo 
 	for segmento in snake:
+
+		if (segmento.xcor == cabeza.xcor) and (segmento.ycor == cabeza.ycor):
+			continue
 
 		segmento_x, segmento_y = in_matriz(segmento)
 
@@ -174,7 +191,7 @@ def cell_neighbors(GameState, node, explored):
 
 	for cell in instant_cells:
 
-		if (GameState[cell[0]][cell[1]] == EMP) and (cell not in explored):
+		if (GameState[cell[1]][cell[0]] == EMP) and (cell not in explored):
 			neighbors.append(cell)
 	
 	return neighbors
@@ -190,7 +207,8 @@ def path(GameState, cab_coords, com_coords):
 
 
 	# Se empieza la búsqueda del path
-	while (True):
+	while True:
+
 		explored = set()    # Set en donde guardaremos las celdas ya explorados
 							# para optimizar la búsqueda
 
@@ -223,7 +241,6 @@ def path(GameState, cab_coords, com_coords):
 
 			# Exploramos cada una de los posibles caminos por turno
 			for cell in cell_neighbors(GameState, node.coords, explored):
-				
 				# Agregamos al PathFinder ese nodo para que sea explorado
 				# En siguientes iteraciones
 				pf.add(Nodo(cell, node))
@@ -231,8 +248,8 @@ def path(GameState, cab_coords, com_coords):
 # Función que devuelve el movimiento a seguir por el snaje
 def IA_mov(cab_coords, cell_to_move):
 
-	x_mov = cell_to_move[0] - cab_coords[0]
-	y_mov = cell_to_move[1] - cab_coords[1]
+	y_mov = cell_to_move[0] - cab_coords[0]
+	x_mov = cell_to_move[1] - cab_coords[1]
 
 	print(f"x move: {x_mov}")
 	print(f"y move: {y_mov}")
@@ -250,98 +267,101 @@ def IA_mov(cab_coords, cell_to_move):
 
 	return direction
 
+def IA(game_state, cab_coors, com_coors, cabeza):
+	print(f"Head coords: [{cab_coors[0]}, {cab_coors[1]}]")
+	print(f"Food coords: [{com_coors[0]}, {com_coors[1]}]")
+	path_to_take = path(game_state, cab_coors, com_coors)
+
+	print(f"path found: {path_to_take}")
+	movToMake = [IA_mov(cab_coors, path_to_take[0]) if (path_to_take != []) else "stop"][0]
+	cabeza.direction = movToMake
+
+	print(f"Move to make: {movToMake}")
+	input()
+
 # -------------- # MAIN DEL JUEGO # ------------------------- #
 
 #los juegos corren en bucles
 while True:
 
-	# Borramos la consola para dibujar el mapa
-	ClearConsole()
-
 	wn.update()
 
-	# Pedimos la matriz estado de juego junto con las coordenadas de la cabeza 
-	game_state, cab_coors, com_coors = discretizar_mundo(cabeza, segmentos, comida)
-	print_game_state(game_state)
+	if (not PAUSE):
+		ClearConsole()
 
+		# Colisiones bordes
+		if cabeza.xcor() > 300:
+			cabeza.setx(-300)
+		if cabeza.xcor() < -300:
+			cabeza.setx(300) 
+		if cabeza.ycor() > 300:
+			cabeza.sety(-300)
+		if cabeza.ycor() < -300:
+			cabeza.sety(300)
 
-	# Colisiones bordes
-	if cabeza.xcor() > 280:
-		cabeza.setx(-280)
-	if cabeza.xcor() < -280:
-		cabeza.setx(280) 
-	if cabeza.ycor() > 280:
-		cabeza.sety(-280)
-	if cabeza.ycor() < -280:
-		cabeza.sety(280)
+		# Colisiones comida
 
-	# Colisiones comida
+		if cabeza.distance(comida) < 20: #tamaño de los objetos 20x20p
 
-	if cabeza.distance(comida) < 20: #tamaño de los objetos 20x20p
+			posible_starts = range(-300, 280, 20)
 
-		posible_starts = range(-280, 280, 20)
+			x = random.choice(posible_starts)
+			y = random.choice(posible_starts)
+			comida.goto(x,y)
 
-		x = random.choice(posible_starts)
-		y = random.choice(posible_starts)
-		comida.goto(x,y)
+			nuevo_segmento = turtle.Turtle() # objeto Turtle
+			nuevo_segmento.speed(0)
+			nuevo_segmento.shape("square") # forma de cuadrado
+			nuevo_segmento.color("blue")
+			nuevo_segmento.penup() # quitar rastro
+			segmentos.append(nuevo_segmento) # en una lista puedo guardar objetos, que putas
 
-		nuevo_segmento = turtle.Turtle() # objeto Turtle
-		nuevo_segmento.speed(0)
-		nuevo_segmento.shape("square") # forma de cuadrado
-		nuevo_segmento.color("blue")
-		nuevo_segmento.penup() # quitar rastro
-		segmentos.append(nuevo_segmento) # en una lista puedo guardar objetos, que putas
+			# aumenta marcador
 
-		# aumenta marcador
+			score+=10
 
-		score+=10
+			if score > high_score:
+				high_score=score
 
-		if score > high_score:
-			high_score=score
-
-		texto.clear()
-		texto.write("Score:  {}     High Score: {}".format(score,high_score)
-										, align = "center", font = ("Courier", 24, "normal"))
-	# colision con el cuerpo
-	for segmento in segmentos:
-		if segmento.distance(cabeza) < 20:
-			time.sleep(1)
-			cabeza.goto(0,0)
-			cabeza.direction = "stop"
-
-			#esconder los segmentos
-			for segmento in segmentos:
-				segmento.goto(1000,1000)
-
-			segmentos.clear()
-
-			score = 0
 			texto.clear()
 			texto.write("Score:  {}     High Score: {}".format(score,high_score)
-										, align = "center", font = ("Courier", 24, "normal"))
+											, align = "center", font = ("Courier", 24, "normal"))
+		# colision con el cuerpo
+		for segmento in segmentos:
+			if segmento.distance(cabeza) < 20:
+				time.sleep(1)
+				cabeza.goto(0,0)
+				cabeza.direction = "stop"
 
-	# Mover el cuerpo de la serpiente
+				#esconder los segmentos
+				for segmento in segmentos:
+					segmento.goto(1000,1000)
 
-	totalSeg = len(segmentos) # cantidad de segmentos
-	for index in range(totalSeg -1, 0, -1): # iteracion en el intervalo [totalSeg -1, 0) reduciendo de 1 en 1
-		x = segmentos[index - 1].xcor() # posicion del segmento superior
-		y = segmentos[index - 1].ycor() 
-		segmentos[index].goto(x,y) # el segmento posterior toma la posicion del superior
+				segmentos.clear()
 
-	if totalSeg>0:
-		x = cabeza.xcor() # la cabeza es el eje fundamental
-		y = cabeza.ycor()
-		segmentos[0].goto(x,y)
+				score = 0
+				texto.clear()
+				texto.write("Score:  {}     High Score: {}".format(score,high_score)
+											, align = "center", font = ("Courier", 24, "normal"))
 
+		# Mover el cuerpo de la serpiente
 
-	path_to_take = path(game_state, cab_coors, com_coors)
+		totalSeg = len(segmentos) # cantidad de segmentos
+		for index in range(totalSeg -1, 0, -1): # iteracion en el intervalo [totalSeg -1, 0) reduciendo de 1 en 1
+			x = segmentos[index - 1].xcor() # posicion del segmento superior
+			y = segmentos[index - 1].ycor() 
+			segmentos[index].goto(x,y) # el segmento posterior toma la posicion del superior
 
-	print(f"path found: {path_to_take}")
-	movToMake = IA_mov(cab_coors, path_to_take[0])
-	cabeza.direction = movToMake
+		if totalSeg>0:
+			x = cabeza.xcor() # la cabeza es el eje fundamental
+			y = cabeza.ycor()
+			segmentos[0].goto(x,y)
+		
+		# Pedimos la matriz estado de juego junto con las coordenadas de la cabeza 
+		game_state, cab_coors, com_coors = discretizar_mundo(cabeza, segmentos, comida)
+		print_game_state(game_state)
 
-	print(f"Move to make: {movToMake}")
-	input()
-	mov()
+		#IA(game_state, cab_coors, com_coors, cabeza)
+		mov()
 
-	time.sleep(posponer)
+		time.sleep(posponer)
