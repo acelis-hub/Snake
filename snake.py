@@ -17,6 +17,9 @@ posponer = 0.1 # segundos
 score = 0
 high_score = 0
 
+size = 20 #tamaño del cuadrado
+mp = 300  # Shorthand for map radius
+
 
 # -- # Preparación de la API gráfica # -- #
 
@@ -28,6 +31,7 @@ wn.setup(width = 1280, height = 720) # dimenciones en pixeles
 wn.tracer(0) # algo placentero
 
 wn.screensize(400,400)
+
 # Cabeza de serpiente
 cabeza = turtle.Turtle() # objeto Turtle
 cabeza.speed(0)
@@ -98,6 +102,8 @@ def mov():
 	if cabeza.direction == "right":
 		x = cabeza.xcor()
 		cabeza.setx(x + 20)
+	
+	print(f"x: {cabeza.xcor()} \n y: {cabeza.ycor()}")
 
 # Teclado
 wn.listen()
@@ -137,7 +143,7 @@ def inicializar_matriz(n):
 
 # Función que me devuelve el índice de la matriz dependiendo las coordenadas
 def in_matriz(obj):
-	return (int((obj.ycor() + 300) / 20) - 1, int((obj.xcor() + 300) / 20) - 1)
+	return (int((obj.ycor() + 300) / 20), int((obj.xcor() + 300) / 20))
 
 
 tamaño = 30 #Variable global para definir el tamaño de la matriz
@@ -148,7 +154,15 @@ def discretizar_mundo(cabeza, snake, comida):
 
 	game_state = inicializar_matriz(tamaño) #Tamaño de la matriz (Tamaño del area donde la serpiente se moverá)
 
-	cabeza_x, cabeza_y = in_matriz(cabeza)
+	cab_coords = in_matriz(cabeza)
+
+	if (cab_coords[0] > 29):
+		cabeza_x, cabeza_y = (29, cab_coords[1])
+	elif (cab_coords[1] > 29):
+		cabeza_x, cabeza_y = (cab_coords[0], 29)
+	else:
+		cabeza_x, cabeza_y = cab_coords
+	
 	comida_x, comida_y = in_matriz(comida)
 
 	print(f"Cabeza coords: {cabeza_x, cabeza_y}")
@@ -282,47 +296,53 @@ def IA(game_state, cab_coors, com_coors, cabeza):
 	print(f"Move to make: {movToMake}")
 	input()
 
-# -------------- # MAIN DEL JUEGO # ------------------------- #
+# -------------- # Dibujar cuadrilla # ---------------------- #
 
 cuadrado = turtle.Turtle() #Objeto cuadrado para la grilla
 
-size = 20 #tamaño del cuadrado
-for x in range(-300//size, 320//size):
-    for y in range(-300//size, 320//size):
-        cuadrado.up()
-        cuadrado.goto(x * size - 10, y * size - 10)
-        cuadrado.down()
-        cuadrado.color("gray")
-        for sides in range(4):
-            cuadrado.forward(size)
-            cuadrado.left(90)
-        cuadrado.hideturtle()
+
+def dibujar_cuadrilla(mp, size, cuadrado):
+	for x in range(-mp//size, mp//size):
+		for y in range(-mp//size, mp//size):
+			cuadrado.up()
+			cuadrado.goto(x * size - 10, y * size - 10)
+			cuadrado.down()
+			cuadrado.color("gray")
+			for sides in range(4):
+				cuadrado.forward(size)
+				cuadrado.left(90)
+			cuadrado.hideturtle()
+
+dibujar_cuadrilla(mp, size, cuadrado)
+
+# -------------- # MAIN DEL JUEGO # ------------------------- #
 
 turtle.update()
 
 #los juegos corren en bucles
 while True:
 
+	# Colisiones bordes
+	if cabeza.xcor() > mp - size:
+		cabeza.setx(-mp)
+	if cabeza.xcor() < -mp:
+		cabeza.setx(mp - size) 
+	if cabeza.ycor() > mp - size:
+		cabeza.sety(-mp)
+	if cabeza.ycor() < -mp:
+		cabeza.sety(mp - size)
+
 	wn.update()
 
 	if (not PAUSE):
 		ClearConsole()
 
-		# Colisiones bordes
-		if cabeza.xcor() > 300:
-			cabeza.setx(-300)
-		if cabeza.xcor() < -300:
-			cabeza.setx(300) 
-		if cabeza.ycor() > 300:
-			cabeza.sety(-300)
-		if cabeza.ycor() < -300:
-			cabeza.sety(300)
 
 		# Colisiones comida
 
-		if cabeza.distance(comida) < 20: #tamaño de los objetos 20x20p
+		if cabeza.distance(comida) < size: #tamaño de los objetos 20x20p
 
-			posible_starts = range(-300, 280, 20)
+			posible_starts = range(-mp, mp - size, size)
 
 			x = random.choice(posible_starts)
 			y = random.choice(posible_starts)
@@ -347,7 +367,7 @@ while True:
 											, align = "center", font = ("Courier", 24, "normal"))
 		# colision con el cuerpo
 		for segmento in segmentos:
-			if segmento.distance(cabeza) < 20:
+			if segmento.distance(cabeza) < size:
 				time.sleep(1)
 				cabeza.goto(0,0)
 				cabeza.direction = "stop"
@@ -363,7 +383,9 @@ while True:
 				texto.write("Score:  {}     High Score: {}".format(score,high_score)
 											, align = "center", font = ("Courier", 24, "normal"))
 
-		# Mover el cuerpo de la serpiente
+		mov()
+
+		time.sleep(posponer)
 
 		totalSeg = len(segmentos) # cantidad de segmentos
 		for index in range(totalSeg -1, 0, -1): # iteracion en el intervalo [totalSeg -1, 0) reduciendo de 1 en 1
@@ -381,6 +403,3 @@ while True:
 		print_game_state(game_state)
 
 		#IA(game_state, cab_coors, com_coors, cabeza)
-		mov()
-
-		time.sleep(posponer)
