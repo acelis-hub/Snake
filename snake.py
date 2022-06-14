@@ -27,7 +27,7 @@ mp = 300  # Shorthand for map radius
 wn = turtle.Screen() # objeto ventana
 wn.title("Snake Game") # titulo 
 wn.bgcolor("black") , # fondo 
-wn.setup(width = 1280, height = 720) # dimenciones en pixeles
+wn.setup(width = 900, height = 800) # dimenciones en pixeles
 wn.tracer(0) # algo placentero
 
 wn.screensize(400,400)
@@ -267,6 +267,7 @@ def path(GameState, cab_coords, com_coords):
 			for cell in cell_neighbors(GameState, node.coords, explored):
 				# Agregamos al PathFinder ese nodo para que sea explorado
 				# En siguientes iteraciones
+				#print(f"Added neigbor: {cell}")
 				pf.add(Nodo(cell, node))
 
 # Función que devuelve el movimiento a seguir por el snaje
@@ -292,6 +293,7 @@ def IA_mov(cab_coords, cell_to_move):
 	return direction
 
 def IA(game_state, cab_coors, com_coors, cabeza):
+
 	print(f"Head coords: [{cab_coors[0]}, {cab_coors[1]}]")
 	print(f"Food coords: [{com_coors[0]}, {com_coors[1]}]")
 	path_to_take = path(game_state, cab_coors, com_coors)
@@ -301,7 +303,7 @@ def IA(game_state, cab_coors, com_coors, cabeza):
 	cabeza.direction = movToMake
 
 	print(f"Move to make: {movToMake}")
-	input()
+	#input()
 
 # -------------- # Dibujar cuadrilla # ---------------------- #
 
@@ -346,10 +348,16 @@ while True:
 
 		ClearConsole()
 
+		# Pedimos la matriz estado de juego junto con las coordenadas de la cabeza 
+		game_state, cab_coors, com_coors = discretizar_mundo(cabeza, segmentos, comida)
+		print_game_state(game_state)
+
 		wn.update()
 
-		# Colisiones comida
 
+		create_segment_flag = False
+		
+		# Colisiones comida
 		if cabeza.distance(comida) < size: #tamaño de los objetos 20x20p
 
 			posible_starts = range(-mp, mp - size, size)
@@ -387,7 +395,7 @@ while True:
 					segmento.goto(1000,1000)
 
 				segmentos.clear()
-
+ 
 				score = 0
 				texto.clear()
 				texto.write("Score:  {}     High Score: {}".format(score,high_score)
@@ -407,10 +415,8 @@ while True:
 			y = cabeza.ycor()
 			segmentos[0].goto(x,y)
 		
+
+		IA(game_state, cab_coors, com_coors, cabeza)
 		mov()
 
-		# Pedimos la matriz estado de juego junto con las coordenadas de la cabeza 
-		game_state, cab_coors, com_coors = discretizar_mundo(cabeza, segmentos, comida)
-		print_game_state(game_state)
 
-		#IA(game_state, cab_coors, com_coors, cabeza)
