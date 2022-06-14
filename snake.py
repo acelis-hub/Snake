@@ -58,7 +58,7 @@ texto.speed(0)
 texto.color("white")
 texto.penup()
 texto.hideturtle()
-texto.goto(0,260)
+texto.goto(0,310)
 texto.write("Score:  0     High Score: 0", align = "center", font = ("Courier", 24, "normal"))
 
 
@@ -329,22 +329,22 @@ turtle.update()
 #los juegos corren en bucles
 while True:
 
+	# Colisiones bordes
+	if cabeza.xcor() > mp - size:
+		cabeza.setx(-mp)
+	if cabeza.xcor() < -mp:
+		cabeza.setx(mp - size) 
+	if cabeza.ycor() > mp - size:
+		cabeza.sety(-mp)
+	if cabeza.ycor() < -mp:
+		cabeza.sety(mp - size)
+
 	wn.update()
 	
 	if (not PAUSE):
 
 
 		ClearConsole()
-
-		# Colisiones bordes
-		if cabeza.xcor() > mp - size:
-			cabeza.setx(-mp)
-		if cabeza.xcor() < -mp:
-			cabeza.setx(mp - size) 
-		if cabeza.ycor() > mp - size:
-			cabeza.sety(-mp)
-		if cabeza.ycor() < -mp + size:
-			cabeza.sety(mp)
 
 		wn.update()
 
