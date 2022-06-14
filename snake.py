@@ -47,7 +47,10 @@ comida.speed(0)
 comida.shape("circle") # forma de circulo
 comida.color("red")
 comida.penup() # quitar rastro
-comida.goto(0,100) # posicion inicial
+
+posible_starts = range(-mp, mp - size, size) # Posibles coordenadas que puede tener la comida al aparecer
+
+comida.goto(random.choice(posible_starts),random.choice(posible_starts)) # posicion inicial
 
 # Cuerpo de la serpiente
 segmentos=[]
@@ -64,7 +67,7 @@ texto.write("Score:  0     High Score: 0", align = "center", font = ("Courier", 
 
 # -- # Funciones del juego # -- #
 
-PAUSE = False
+PAUSE = True
 
 #Direcciones variables 
 def arriba():
@@ -230,11 +233,11 @@ def path(GameState, cab_coords, com_coords):
 	pf.add(start)		# Agregamos el nodo inicial al PathFinder
 
 
+	explored = set()    # Set en donde guardaremos las celdas ya explorados
+						# para optimizar la búsqueda
+
 	# Se empieza la búsqueda del path
 	while True:
-
-		explored = set()    # Set en donde guardaremos las celdas ya explorados
-							# para optimizar la búsqueda
 
 		# Si no hay nada en el path finder devolvemos None
 		if (pf.empty()):
@@ -242,6 +245,8 @@ def path(GameState, cab_coords, com_coords):
 
 		# Tomamos un nodo de la fila
 		node = pf.remove()
+
+		explored.add(node.coords)
 
 		# Si el nodo el la meta, devolvemos el path que llegó a él
 		if (node.coords == goal):
@@ -261,7 +266,6 @@ def path(GameState, cab_coords, com_coords):
 		# Si no hemos llegado a la meta, expandimos los path
 		else:
 			
-			explored.add(node.coords)
 
 			# Exploramos cada una de los posibles caminos por turno
 			for cell in cell_neighbors(GameState, node.coords, explored):
@@ -296,6 +300,7 @@ def IA(game_state, cab_coors, com_coors, cabeza):
 
 	print(f"Head coords: [{cab_coors[0]}, {cab_coors[1]}]")
 	print(f"Food coords: [{com_coors[0]}, {com_coors[1]}]")
+
 	path_to_take = path(game_state, cab_coors, com_coors)
 
 	print(f"path found: {path_to_take}")
@@ -303,7 +308,7 @@ def IA(game_state, cab_coors, com_coors, cabeza):
 	cabeza.direction = movToMake
 
 	print(f"Move to make: {movToMake}")
-	#input()
+	input()
 
 # -------------- # Dibujar cuadrilla # ---------------------- #
 
@@ -359,8 +364,6 @@ while True:
 		
 		# Colisiones comida
 		if cabeza.distance(comida) < size: #tamaño de los objetos 20x20p
-
-			posible_starts = range(-mp, mp - size, size)
 
 			x = random.choice(posible_starts)
 			y = random.choice(posible_starts)
