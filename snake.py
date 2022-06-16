@@ -207,6 +207,42 @@ def print_game_state(GameState):
 
 # -------------- # IMPLEMENTACIÓN IA # ----------------------- #
 
+# Funcìòn que permite el teletransporte
+def tele_ia(coords):
+
+	cells = list()
+
+	# Borde izquierdo
+	if coords[0] == 0:
+		cells.append((29, coords[1]))
+	else:
+		cells.append((coords[0] - 1, coords[1]))
+
+	# Borde derecho
+	if coords[0] == 29:
+		cells.append((0, coords[1]))
+	else:
+		cells.append((coords[0] + 1, coords[1]))
+
+	# Borde superior
+	if coords[1] == 29:
+		cells.append( (coords[0], 0) )
+	else:
+		cells.append((coords[0], coords[1] + 1))
+
+	# Borde inferior
+	if coords[1] == 0:
+		cells.append((coords[0], 29))
+	else:
+		cells.append((coords[0], coords[1] - 1))
+
+
+	return cells
+
+
+
+
+
 # Función que me devuelve los posibles movimientos dada una celda como cabeza
 def cell_neighbors(GameState, node, explored):
 
@@ -214,14 +250,16 @@ def cell_neighbors(GameState, node, explored):
 
 	# node = node[::-1]
 
-	instant_cells = [(node[0] - 1, node[1]), (node[0] + 1, node[1]), (node[0], node[1] + 1), (node[0], node[1] - 1)]
+	instant_cells = tele_ia(node)
 
 	for cell in instant_cells:
 
-		if (GameState[cell[1]][cell[0]] == EMP) and (cell not in explored):
+		if (GameState[cell[1]][cell[0]] == EMP) and (cell[::-1] not in explored):
 			neighbors.append(cell)
+			explored.add(cell)
 	
 	return neighbors
+
 
 # Función que implementa la el algoritmo de Djistkra (no sé cómo se escribe xD)
 def path(GameState, cab_coords, com_coords):
@@ -246,7 +284,9 @@ def path(GameState, cab_coords, com_coords):
 		# Tomamos un nodo de la fila
 		node = pf.remove()
 
-		explored.add(node.coords)
+		#explored.add(node.coords)
+
+		print(f"Explored cell:{node.coords}")
 
 		# Si el nodo el la meta, devolvemos el path que llegó a él
 		if (node.coords == goal):
@@ -265,7 +305,6 @@ def path(GameState, cab_coords, com_coords):
 		
 		# Si no hemos llegado a la meta, expandimos los path
 		else:
-			
 
 			# Exploramos cada una de los posibles caminos por turno
 			for cell in cell_neighbors(GameState, node.coords, explored):
@@ -273,6 +312,8 @@ def path(GameState, cab_coords, com_coords):
 				# En siguientes iteraciones
 				#print(f"Added neigbor: {cell}")
 				pf.add(Nodo(cell, node))
+
+
 
 # Función que devuelve el movimiento a seguir por el snaje
 def IA_mov(cab_coords, cell_to_move):
@@ -285,16 +326,18 @@ def IA_mov(cab_coords, cell_to_move):
 
 	direction = None
 
-	if (x_mov == 1):
+	if (x_mov == 1) or (x_mov == -29):
 		direction = "right"
-	if (x_mov == -1): 
+	if (x_mov == -1) or (x_mov == 29): 
 		direction = "left"
-	if (y_mov == -1):
+	if (y_mov == -1) or (y_mov == 29):
 		direction = "down"
-	if (y_mov == 1):
+	if (y_mov == 1) or (y_mov == -29):
 		direction = "up"
 
 	return direction
+
+prev_mov = None
 
 def IA(game_state, cab_coors, com_coors, cabeza):
 
@@ -304,7 +347,13 @@ def IA(game_state, cab_coors, com_coors, cabeza):
 	path_to_take = path(game_state, cab_coors, com_coors)
 
 	print(f"path found: {path_to_take}")
-	movToMake = [IA_mov(cab_coors, path_to_take[0]) if (path_to_take != []) else "stop"][0]
+
+	global prev_mov
+
+	movToMake = [IA_mov(cab_coors, path_to_take[0]) if (path_to_take != []) else prev_mov][0]
+
+	prev_mov = movToMake
+
 	cabeza.direction = movToMake
 
 	print(f"Move to make: {movToMake}")
@@ -421,5 +470,4 @@ while True:
 
 		IA(game_state, cab_coors, com_coors, cabeza)
 		mov()
-
 
