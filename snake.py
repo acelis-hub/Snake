@@ -1,13 +1,19 @@
 import turtle
 import time
 import random
+import winsound
+
 
 import os
 from util import Nodo, PathFinder
 
 # ---------- # PREPARATIVOS PARA EL CÓDIGO # -------------- #
 
-
+#Sonido al recoger la comida
+def play():
+    winsound.PlaySound('beep.wav',winsound.SND_ASYNC)
+    
+    
 # -- # Funciones, objetos y herramientas # -- #
 
 # Función que limpia la consola
@@ -31,7 +37,7 @@ wn.setup(width = 1280, height = 720) # dimenciones en pixeles
 wn.tracer(0) # algo placentero
 
 wn.screensize(400,400)
-
+winsound.PlaySound('8bits',winsound.SND_FILENAME)
 # Cabeza de serpiente
 cabeza = turtle.Turtle() # objeto Turtle
 cabeza.speed(0)
@@ -62,6 +68,9 @@ texto.goto(0,310)
 texto.write("Score:  0     High Score: 0", align = "center", font = ("Courier", 24, "normal"))
 
 
+
+
+
 # -- # Funciones del juego # -- #
 
 PAUSE = False
@@ -78,13 +87,22 @@ def derecha():
 def espacio():
 
 	global PAUSE
-
-	if (PAUSE):
-		PAUSE = False
-	else:
+        
+	texto2 = turtle.Turtle()
+	texto2.speed(0)
+	texto2.color("white")
+	texto2.penup()
+	texto2.hideturtle()
+	texto2.goto(0,-150)
+    
+	if (PAUSE == False):
 		PAUSE = True
-
-
+		texto2.write("PAUSA", align = "center", font = ("Courier", 250, "normal"))
+	else:
+	    turtle.Turtle.undo(texto2)
+	    PAUSE = False
+        
+        
 #Funciones de movimiento
 def mov():
 	if cabeza.direction == "up":
@@ -326,91 +344,104 @@ dibujar_cuadrilla(mp, size, cuadrado)
 
 turtle.update()
 
+
+
+
+
+
 #los juegos corren en bucles
 while True:
 
-	# Colisiones bordes
-	if cabeza.xcor() > mp - size:
-		cabeza.setx(-mp)
-	if cabeza.xcor() < -mp:
-		cabeza.setx(mp - size) 
-	if cabeza.ycor() > mp - size:
-		cabeza.sety(-mp)
-	if cabeza.ycor() < -mp:
-		cabeza.sety(mp - size)
-
-	wn.update()
+    # Colisiones bordes
 	
-	if (not PAUSE):
+    
+    if cabeza.xcor() > mp - size:
+        cabeza.setx(-mp)
 
+    if cabeza.xcor() < -mp:
+        cabeza.setx(mp - size) 
 
-		ClearConsole()
+    if cabeza.ycor() > mp - size:
 
-		wn.update()
+        cabeza.sety(-mp)
+
+    if cabeza.ycor() < -mp:
+
+        cabeza.sety(mp - size)
+
+    wn.update()
+	
+    if (not PAUSE):
+
+        
+        ClearConsole()
+
+        wn.update()
 
 		# Colisiones comida
 
-		if cabeza.distance(comida) < size: #tamaño de los objetos 20x20p
+        if cabeza.distance(comida) < size: #tamaño de los objetos 20x20p
+            play()
+            posible_starts = range(-mp, mp - size, size)
 
-			posible_starts = range(-mp, mp - size, size)
+            x = random.choice(posible_starts)
+            y = random.choice(posible_starts)
+            comida.goto(x,y)
 
-			x = random.choice(posible_starts)
-			y = random.choice(posible_starts)
-			comida.goto(x,y)
-
-			nuevo_segmento = turtle.Turtle() # objeto Turtle
-			nuevo_segmento.speed(0)
-			nuevo_segmento.shape("square") # forma de cuadrado
-			nuevo_segmento.color("blue")
-			nuevo_segmento.penup() # quitar rastro
-			segmentos.append(nuevo_segmento) # en una lista puedo guardar objetos, que putas
+            nuevo_segmento = turtle.Turtle() # objeto Turtle
+            nuevo_segmento.speed(0)
+            nuevo_segmento.shape("square") # forma de cuadrado
+            nuevo_segmento.color("blue")
+            nuevo_segmento.penup() # quitar rastro
+            segmentos.append(nuevo_segmento) # en una lista puedo guardar objetos, que putas
 
 			# aumenta marcador
 
-			score+=1
+            score+=1
 
-			if score > high_score:
-				high_score=score
+            if score > high_score:
+            	high_score=score
 
-			texto.clear()
-			texto.write("Score:  {}     High Score: {}".format(score,high_score)
+            texto.clear()
+            texto.write("Score:  {}     High Score: {}".format(score,high_score)
 											, align = "center", font = ("Courier", 24, "normal"))
 		# colision con el cuerpo
-		for segmento in segmentos:
-			if segmento.distance(cabeza) < size:
-				time.sleep(1)
-				cabeza.goto(0,0)
-				cabeza.direction = "stop"
+        for segmento in segmentos:
+            if segmento.distance(cabeza) < size:
+            	time.sleep(1)
+            	cabeza.goto(0,0)
+            	cabeza.direction = "stop"
 
 				#esconder los segmentos
-				for segmento in segmentos:
-					segmento.goto(1000,1000)
+            	for segmento in segmentos:
+            		segmento.goto(1000,1000)
 
-				segmentos.clear()
+            	segmentos.clear()
 
-				score = 0
-				texto.clear()
-				texto.write("Score:  {}     High Score: {}".format(score,high_score)
+            	score = 0
+            	texto.clear()
+            	texto.write("Score:  {}     High Score: {}".format(score,high_score)
 											, align = "center", font = ("Courier", 24, "normal"))
 
 
-		time.sleep(posponer)
+        time.sleep(posponer)
 
-		totalSeg = len(segmentos) # cantidad de segmentos
-		for index in range(totalSeg -1, 0, -1): # iteracion en el intervalo [totalSeg -1, 0) reduciendo de 1 en 1
-			x = segmentos[index - 1].xcor() # posicion del segmento superior
-			y = segmentos[index - 1].ycor() 
-			segmentos[index].goto(x,y) # el segmento posterior toma la posicion del superior
+        totalSeg = len(segmentos) # cantidad de segmentos
+        for index in range(totalSeg -1, 0, -1): # iteracion en el intervalo [totalSeg -1, 0) reduciendo de 1 en 1
+            x = segmentos[index - 1].xcor() # posicion del segmento superior
+            y = segmentos[index - 1].ycor() 
+            segmentos[index].goto(x,y) # el segmento posterior toma la posicion del superior
 
-		if totalSeg>0:
-			x = cabeza.xcor() # la cabeza es el eje fundamental
-			y = cabeza.ycor()
-			segmentos[0].goto(x,y)
+        if totalSeg>0:
+            x = cabeza.xcor() # la cabeza es el eje fundamental
+            y = cabeza.ycor()
+            segmentos[0].goto(x,y)
 		
-		mov()
 
 		# Pedimos la matriz estado de juego junto con las coordenadas de la cabeza 
-		game_state, cab_coors, com_coors = discretizar_mundo(cabeza, segmentos, comida)
-		print_game_state(game_state)
+        game_state, cab_coors, com_coors = discretizar_mundo(cabeza, segmentos, comida)
+        print_game_state(game_state)
 
-		#IA(game_state, cab_coors, com_coors, cabeza)
+        #IA(game_state, cab_coors, com_coors, cabeza)
+        mov()
+turtle.done()
