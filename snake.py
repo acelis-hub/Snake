@@ -95,12 +95,12 @@ def espacio():
 	texto2.hideturtle()
 	texto2.goto(0,-150)
     
-	if (PAUSE == False):
-		PAUSE = True
-		texto2.write("PAUSA", align = "center", font = ("Courier", 250, "normal"))
-	else:
-	    turtle.Turtle.undo(texto2)
-	    PAUSE = False
+	if (PAUSE):
+		PAUSE = False
+		turtle.Turtle.undo(texto2)
+	elif (not PAUSE):
+	    PAUSE = True
+	    texto2.write("PAUSA", align = "center", font = ("Courier", 250, "normal"))
         
         
 #Funciones de movimiento
