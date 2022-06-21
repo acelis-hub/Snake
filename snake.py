@@ -87,20 +87,11 @@ def derecha():
 def espacio():
 
 	global PAUSE
-        
-	texto2 = turtle.Turtle()
-	texto2.speed(0)
-	texto2.color("white")
-	texto2.penup()
-	texto2.hideturtle()
-	texto2.goto(0,-150)
-    
+
 	if (PAUSE):
 		PAUSE = False
-		turtle.Turtle.undo(texto2)
 	elif (not PAUSE):
 	    PAUSE = True
-	    texto2.write("PAUSA", align = "center", font = ("Courier", 250, "normal"))
         
         
 #Funciones de movimiento
