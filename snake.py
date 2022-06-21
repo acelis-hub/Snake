@@ -253,7 +253,7 @@ def cell_neighbors(GameState, node, explored):
 
 	for cell in instant_cells:
 
-		if (GameState[cell[1]][cell[0]] == EMP) and (cell not in explored):
+		if (GameState[cell[0]][cell[1]] == EMP) and (cell not in explored):
 			neighbors.append(cell)
 			explored.add(cell)
 	
