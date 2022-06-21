@@ -237,10 +237,7 @@ def tele_ia(coords):
 		cells.append((coords[0], coords[1] - 1))
 
 
-	return cells
-
-
-
+	return cells[::][::-1]
 
 
 # Función que me devuelve los posibles movimientos dada una celda como cabeza
@@ -252,9 +249,11 @@ def cell_neighbors(GameState, node, explored):
 
 	instant_cells = tele_ia(node)
 
+	#print(f"Explored set: {explored}")
+
 	for cell in instant_cells:
 
-		if (GameState[cell[1]][cell[0]] == EMP) and (cell[::-1] not in explored):
+		if (GameState[cell[1]][cell[0]] == EMP) and (cell not in explored):
 			neighbors.append(cell)
 			explored.add(cell)
 	
@@ -284,9 +283,9 @@ def path(GameState, cab_coords, com_coords):
 		# Tomamos un nodo de la fila
 		node = pf.remove()
 
-		#explored.add(node.coords)
+		explored.add(node.coords)
 
-		print(f"Explored cell:{node.coords}")
+		# print(f"Explored cell:{node.coords}")
 
 		# Si el nodo el la meta, devolvemos el path que llegó a él
 		if (node.coords == goal):
@@ -357,7 +356,7 @@ def IA(game_state, cab_coors, com_coors, cabeza):
 	cabeza.direction = movToMake
 
 	print(f"Move to make: {movToMake}")
-	input()
+	# input()
 
 # -------------- # Dibujar cuadrilla # ---------------------- #
 
