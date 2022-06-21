@@ -19,7 +19,7 @@ def play():
 # Función que limpia la consola
 ClearConsole = lambda: os.system("cls" if os.name in ("nt", "dos") else "clear")
 
-posponer = 0.1 # segundos
+posponer = 0.005 # segundos
 score = 0
 high_score = 0
 
@@ -33,7 +33,7 @@ mp = 300  # Shorthand for map radius
 wn = turtle.Screen() # objeto ventana
 wn.title("Snake Game") # titulo 
 wn.bgcolor("black") , # fondo 
-wn.setup(width = 1280, height = 720) # dimenciones en pixeles
+wn.setup(width = 900, height = 800) # dimenciones en pixeles
 wn.tracer(0) # algo placentero
 
 wn.screensize(400,400)
@@ -53,7 +53,10 @@ comida.speed(0)
 comida.shape("circle") # forma de circulo
 comida.color("red")
 comida.penup() # quitar rastro
-comida.goto(0,100) # posicion inicial
+
+posible_starts = range(-mp, mp - size, size) # Posibles coordenadas que puede tener la comida al aparecer
+
+comida.goto(random.choice(posible_starts),random.choice(posible_starts)) # posicion inicial
 
 # Cuerpo de la serpiente
 segmentos=[]
@@ -73,7 +76,7 @@ texto.write("Score:  0     High Score: 0", align = "center", font = ("Courier", 
 
 # -- # Funciones del juego # -- #
 
-PAUSE = False
+PAUSE = True
 
 #Direcciones variables 
 def arriba():
@@ -213,6 +216,39 @@ def print_game_state(GameState):
 
 # -------------- # IMPLEMENTACIÓN IA # ----------------------- #
 
+# Funcìòn que permite el teletransporte
+def tele_ia(coords):
+
+	cells = list()
+
+	# Borde izquierdo
+	if coords[0] == 0:
+		cells.append((29, coords[1]))
+	else:
+		cells.append((coords[0] - 1, coords[1]))
+
+	# Borde derecho
+	if coords[0] == 29:
+		cells.append((0, coords[1]))
+	else:
+		cells.append((coords[0] + 1, coords[1]))
+
+	# Borde superior
+	if coords[1] == 29:
+		cells.append( (coords[0], 0) )
+	else:
+		cells.append((coords[0], coords[1] + 1))
+
+	# Borde inferior
+	if coords[1] == 0:
+		cells.append((coords[0], 29))
+	else:
+		cells.append((coords[0], coords[1] - 1))
+
+
+	return cells[::][::-1]
+
+
 # Función que me devuelve los posibles movimientos dada una celda como cabeza
 def cell_neighbors(GameState, node, explored):
 
@@ -220,14 +256,18 @@ def cell_neighbors(GameState, node, explored):
 
 	# node = node[::-1]
 
-	instant_cells = [(node[0] - 1, node[1]), (node[0] + 1, node[1]), (node[0], node[1] + 1), (node[0], node[1] - 1)]
+	instant_cells = tele_ia(node)
+
+	#print(f"Explored set: {explored}")
 
 	for cell in instant_cells:
 
 		if (GameState[cell[1]][cell[0]] == EMP) and (cell not in explored):
 			neighbors.append(cell)
+			explored.add(cell)
 	
 	return neighbors
+
 
 # Función que implementa la el algoritmo de Djistkra (no sé cómo se escribe xD)
 def path(GameState, cab_coords, com_coords):
@@ -239,11 +279,11 @@ def path(GameState, cab_coords, com_coords):
 	pf.add(start)		# Agregamos el nodo inicial al PathFinder
 
 
+	explored = set()    # Set en donde guardaremos las celdas ya explorados
+						# para optimizar la búsqueda
+
 	# Se empieza la búsqueda del path
 	while True:
-
-		explored = set()    # Set en donde guardaremos las celdas ya explorados
-							# para optimizar la búsqueda
 
 		# Si no hay nada en el path finder devolvemos None
 		if (pf.empty()):
@@ -251,6 +291,10 @@ def path(GameState, cab_coords, com_coords):
 
 		# Tomamos un nodo de la fila
 		node = pf.remove()
+
+		explored.add(node.coords)
+
+		# print(f"Explored cell:{node.coords}")
 
 		# Si el nodo el la meta, devolvemos el path que llegó a él
 		if (node.coords == goal):
@@ -269,14 +313,15 @@ def path(GameState, cab_coords, com_coords):
 		
 		# Si no hemos llegado a la meta, expandimos los path
 		else:
-			
-			explored.add(node.coords)
 
 			# Exploramos cada una de los posibles caminos por turno
 			for cell in cell_neighbors(GameState, node.coords, explored):
 				# Agregamos al PathFinder ese nodo para que sea explorado
 				# En siguientes iteraciones
+				#print(f"Added neigbor: {cell}")
 				pf.add(Nodo(cell, node))
+
+
 
 # Función que devuelve el movimiento a seguir por el snaje
 def IA_mov(cab_coords, cell_to_move):
@@ -289,29 +334,38 @@ def IA_mov(cab_coords, cell_to_move):
 
 	direction = None
 
-	if (x_mov == 1):
+	if (x_mov == 1) or (x_mov == -29):
 		direction = "right"
-	if (x_mov == -1): 
+	if (x_mov == -1) or (x_mov == 29): 
 		direction = "left"
-	if (y_mov == -1):
+	if (y_mov == -1) or (y_mov == 29):
 		direction = "down"
-	if (y_mov == 1):
+	if (y_mov == 1) or (y_mov == -29):
 		direction = "up"
 
 	return direction
 
+prev_mov = None
+
 def IA(game_state, cab_coors, com_coors, cabeza):
+
 	print(f"Head coords: [{cab_coors[0]}, {cab_coors[1]}]")
 	print(f"Food coords: [{com_coors[0]}, {com_coors[1]}]")
+
 	path_to_take = path(game_state, cab_coors, com_coors)
 
 	print(f"path found: {path_to_take}")
-	movToMake = [IA_mov(cab_coors, path_to_take[0]) if (path_to_take != []) else "stop"][0]
+
+	global prev_mov
+
+	movToMake = [IA_mov(cab_coors, path_to_take[0]) if (path_to_take != [] and path_to_take != None) else prev_mov][0]
+
+	prev_mov = movToMake
+
 	cabeza.direction = movToMake
 
 	print(f"Move to make: {movToMake}")
-	input()
-
+	# input()
 # -------------- # Dibujar cuadrilla # ---------------------- #
 
 cuadrado = turtle.Turtle() #Objeto cuadrado para la grilla
@@ -369,24 +423,29 @@ while True:
 
         wn.update()
 
+
+		create_segment_flag = False
+		
 		# Colisiones comida
+		if cabeza.distance(comida) < size: #tamaño de los objetos 20x20p
 
-        if cabeza.distance(comida) < size: #tamaño de los objetos 20x20p
-            play()
-            posible_starts = range(-mp, mp - size, size)
+			x = random.choice(posible_starts)
+			y = random.choice(posible_starts)
 
-            x = random.choice(posible_starts)
-            y = random.choice(posible_starts)
-            comida.goto(x,y)
-
-            nuevo_segmento = turtle.Turtle() # objeto Turtle
-            nuevo_segmento.speed(0)
-            nuevo_segmento.shape("square") # forma de cuadrado
-            nuevo_segmento.color("blue")
-            nuevo_segmento.penup() # quitar rastro
-            segmentos.append(nuevo_segmento) # en una lista puedo guardar objetos, que putas
+			nuevo_segmento = turtle.Turtle() # objeto Turtle
+			nuevo_segmento.speed(0)
+			nuevo_segmento.shape("square") # forma de cuadrado
+			nuevo_segmento.color("blue")
+			nuevo_segmento.penup() # quitar rastro
+			segmentos.append(nuevo_segmento) # en una lista puedo guardar objetos, que putas
 
 			# aumenta marcador
+			while ( any((x == segment.xcor() and y == segment.ycor()) for segment in segmentos)): 
+
+				x = random.choice(posible_starts)
+				y = random.choice(posible_starts)
+
+			comida.goto(x,y)
 
             score+=1
 
@@ -397,21 +456,22 @@ while True:
             texto.write("Score:  {}     High Score: {}".format(score,high_score)
 											, align = "center", font = ("Courier", 24, "normal"))
 		# colision con el cuerpo
-        for segmento in segmentos:
-            if segmento.distance(cabeza) < size:
-            	time.sleep(1)
-            	cabeza.goto(0,0)
-            	cabeza.direction = "stop"
+		for segmento in segmentos:
+			if segmento.distance(cabeza) < size:
+				time.sleep(1)
+				PAUSE = True
+				cabeza.goto(0,0)
+				cabeza.direction = "stop"
 
 				#esconder los segmentos
             	for segmento in segmentos:
             		segmento.goto(1000,1000)
 
-            	segmentos.clear()
-
-            	score = 0
-            	texto.clear()
-            	texto.write("Score:  {}     High Score: {}".format(score,high_score)
+				segmentos.clear()
+ 
+				score = 0
+				texto.clear()
+				texto.write("Score:  {}     High Score: {}".format(score,high_score)
 											, align = "center", font = ("Courier", 24, "normal"))
 
 
@@ -423,16 +483,12 @@ while True:
             y = segmentos[index - 1].ycor() 
             segmentos[index].goto(x,y) # el segmento posterior toma la posicion del superior
 
-        if totalSeg>0:
-            x = cabeza.xcor() # la cabeza es el eje fundamental
-            y = cabeza.ycor()
-            segmentos[0].goto(x,y)
-		
+		if totalSeg>0:
+			x = cabeza.xcor() # la cabeza es el eje fundamental
+			y = cabeza.ycor()
+			segmentos[0].goto(x,y)
 
-		# Pedimos la matriz estado de juego junto con las coordenadas de la cabeza 
-        game_state, cab_coors, com_coors = discretizar_mundo(cabeza, segmentos, comida)
-        print_game_state(game_state)
+		IA(game_state, cab_coors, com_coors, cabeza)
 
-        #IA(game_state, cab_coors, com_coors, cabeza)
-        mov()
-turtle.done()
+		mov()
+
