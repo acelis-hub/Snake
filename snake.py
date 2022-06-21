@@ -13,7 +13,7 @@ from util import Nodo, PathFinder
 # Función que limpia la consola
 ClearConsole = lambda: os.system("cls" if os.name in ("nt", "dos") else "clear")
 
-posponer = 0.1 # segundos
+posponer = 0.005 # segundos
 score = 0
 high_score = 0
 
@@ -349,7 +349,7 @@ def IA(game_state, cab_coors, com_coors, cabeza):
 
 	global prev_mov
 
-	movToMake = [IA_mov(cab_coors, path_to_take[0]) if (path_to_take != []) else prev_mov][0]
+	movToMake = [IA_mov(cab_coors, path_to_take[0]) if (path_to_take != [] and path_to_take != None) else prev_mov][0]
 
 	prev_mov = movToMake
 
@@ -414,7 +414,6 @@ while True:
 
 			x = random.choice(posible_starts)
 			y = random.choice(posible_starts)
-			comida.goto(x,y)
 
 			nuevo_segmento = turtle.Turtle() # objeto Turtle
 			nuevo_segmento.speed(0)
@@ -424,6 +423,12 @@ while True:
 			segmentos.append(nuevo_segmento) # en una lista puedo guardar objetos, que putas
 
 			# aumenta marcador
+			while ( any((x == segment.xcor() and y == segment.ycor()) for segment in segmentos)): 
+
+				x = random.choice(posible_starts)
+				y = random.choice(posible_starts)
+
+			comida.goto(x,y)
 
 			score+=1
 
@@ -437,6 +442,7 @@ while True:
 		for segmento in segmentos:
 			if segmento.distance(cabeza) < size:
 				time.sleep(1)
+				PAUSE = True
 				cabeza.goto(0,0)
 				cabeza.direction = "stop"
 
@@ -464,7 +470,6 @@ while True:
 			x = cabeza.xcor() # la cabeza es el eje fundamental
 			y = cabeza.ycor()
 			segmentos[0].goto(x,y)
-		
 
 		IA(game_state, cab_coors, com_coors, cabeza)
 
