@@ -253,7 +253,7 @@ def cell_neighbors(GameState, node, explored):
 
 	for cell in instant_cells:
 
-		if (GameState[cell[0]][cell[1]] == EMP) and (cell not in explored):
+		if (GameState[cell[1]][cell[0]] == EMP) and (cell not in explored):
 			neighbors.append(cell)
 			explored.add(cell)
 	
@@ -357,7 +357,6 @@ def IA(game_state, cab_coors, com_coors, cabeza):
 
 	print(f"Move to make: {movToMake}")
 	# input()
-
 # -------------- # Dibujar cuadrilla # ---------------------- #
 
 cuadrado = turtle.Turtle() #Objeto cuadrado para la grilla
@@ -468,5 +467,6 @@ while True:
 		
 
 		IA(game_state, cab_coors, com_coors, cabeza)
+
 		mov()
 
