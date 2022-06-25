@@ -27,7 +27,7 @@ mp = 300  # Shorthand for map radius
 wn = turtle.Screen() # objeto ventana
 wn.title("Snake Game") # titulo 
 wn.bgcolor("black") , # fondo 
-wn.setup(width = 900, height = 800) # dimenciones en pixeles
+wn.setup(width = 800, height = 800) # dimenciones en pixeles
 wn.tracer(0) # algo placentero
 
 wn.screensize(400,400)
@@ -193,6 +193,19 @@ def discretizar_mundo(cabeza, snake, comida):
 
 	return (game_state[::-1], (cabeza_x, cabeza_y), (comida_x, comida_y))
 
+def corpse(GameState):
+
+	corpse_segments = set()
+
+	for cIn, column in enumerate(GameState):
+		for rIn, row in enumerate(column):
+
+			if GameState[cIn][rIn] == CUE:
+				corpse_segments.add((rIn, 29 - cIn))
+	
+	# print(f"Corpse: {corpse_segments}")
+	return corpse_segments
+
 # Función que imprime a consola el estado del juego
 def print_game_state(GameState):
 
@@ -251,11 +264,14 @@ def cell_neighbors(GameState, node, explored):
 
 	#print(f"Explored set: {explored}")
 
+	corpse_segments = corpse(GameState)
+
 	for cell in instant_cells:
 
-		if (GameState[cell[1]][cell[0]] == EMP) and (cell not in explored):
+		if (cell not in corpse_segments) and (cell not in explored):
 			neighbors.append(cell)
 			explored.add(cell)
+		
 	
 	return neighbors
 
@@ -338,6 +354,7 @@ def IA_mov(cab_coords, cell_to_move):
 
 prev_mov = None
 
+# Función que encuentra el path y lo retorna
 def IA(game_state, cab_coors, com_coors, cabeza):
 
 	print(f"Head coords: [{cab_coors[0]}, {cab_coors[1]}]")
@@ -345,18 +362,31 @@ def IA(game_state, cab_coors, com_coors, cabeza):
 
 	path_to_take = path(game_state, cab_coors, com_coors)
 
+	if (path_to_take == None):
+		print(f"No path found \n Head: {cab_coors} \n Food: {com_coors}")
+
 	print(f"path found: {path_to_take}")
+
+	return path_to_take
+
+	
+	# input()
+
+# Función que hace el siguiente movimiento del path
+def IA_make_move(path, head):
 
 	global prev_mov
 
-	movToMake = [IA_mov(cab_coors, path_to_take[0]) if (path_to_take != [] and path_to_take != None) else prev_mov][0]
+	movToMake = [IA_mov(cab_coors, path[0]) if (path != [] and path != None) else prev_mov][0]
 
 	prev_mov = movToMake
 
 	cabeza.direction = movToMake
 
 	print(f"Move to make: {movToMake}")
-	# input()
+
+	return (path[1::] if (path != None or path != []) else False)
+
 # -------------- # Dibujar cuadrilla # ---------------------- #
 
 cuadrado = turtle.Turtle() #Objeto cuadrado para la grilla
@@ -380,6 +410,9 @@ dibujar_cuadrilla(mp, size, cuadrado)
 
 turtle.update()
 
+IA_SEARCH_PATH = True
+IA_FOUND_PATH = None
+
 #los juegos corren en bucles
 while True:
 
@@ -400,9 +433,6 @@ while True:
 
 		ClearConsole()
 
-		# Pedimos la matriz estado de juego junto con las coordenadas de la cabeza 
-		game_state, cab_coors, com_coors = discretizar_mundo(cabeza, segmentos, comida)
-		print_game_state(game_state)
 
 		wn.update()
 
@@ -471,7 +501,22 @@ while True:
 			y = cabeza.ycor()
 			segmentos[0].goto(x,y)
 
-		IA(game_state, cab_coors, com_coors, cabeza)
+		
+		# Pedimos la matriz estado de juego junto con las coordenadas de la cabeza 
+		game_state, cab_coors, com_coors = discretizar_mundo(cabeza, segmentos, comida)
+		print_game_state(game_state)
+
+		if (IA_SEARCH_PATH):
+			IA_FOUND_PATH = IA(game_state, cab_coors, com_coors, cabeza)
+			IA_SEARCH_PATH = False
+			
+		path_flag = IA_make_move(IA_FOUND_PATH, cab_coors)
+
+		if not path_flag:
+			IA_SEARCH_PATH = True
+		else:
+			IA_FOUND_PATH = path_flag
 
 		mov()
+
 
