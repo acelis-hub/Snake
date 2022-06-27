@@ -1,31 +1,52 @@
 import turtle
 import time
 import random
-import winsound
-
-
 import os
+
+from pygame import mixer
+
 from util import Nodo, PathFinder
 
+
+mixer.init()
 # ---------- # PREPARATIVOS PARA EL CÓDIGO # -------------- #
 
-#Sonido al recoger la comida
-def play():
-    winsound.PlaySound('beep.wav',winsound.SND_ASYNC)
-    
-    
+
 # -- # Funciones, objetos y herramientas # -- #
 
 # Función que limpia la consola
 ClearConsole = lambda: os.system("cls" if os.name in ("nt", "dos") else "clear")
 
-posponer = 0.1 # segundos
+posponer = 0 # segundos
 score = 0
 high_score = 0
 
 size = 20 #tamaño del cuadrado
 mp = 300  # Shorthand for map radius
 
+# -- # Musica
+
+Beep = mixer.Sound('Beep.wav')
+Sonido = mixer.Sound('Diomedes.mp3')
+
+
+
+def sonido(Beep):
+    Beep.set_volume(0.3)
+    mixer.Sound.play(Beep)
+
+def play_musica(Sonido):
+    Sonido.set_volume(0.3)
+    mixer.Sound.play(Sonido,-1)
+    
+def stop_musica(Sonido):
+    Sonido.set_volume(0)
+
+def unpaused_musica():
+    mixer.unpause()
+    
+def paused_musica():
+    mixer.pause()
 
 # -- # Preparación de la API gráfica # -- #
 
@@ -37,7 +58,7 @@ wn.setup(width = 1280, height = 720) # dimenciones en pixeles
 wn.tracer(0) # algo placentero
 
 wn.screensize(400,400)
-winsound.PlaySound('8bits',winsound.SND_FILENAME)
+
 # Cabeza de serpiente
 cabeza = turtle.Turtle() # objeto Turtle
 cabeza.speed(0)
@@ -53,7 +74,10 @@ comida.speed(0)
 comida.shape("circle") # forma de circulo
 comida.color("red")
 comida.penup() # quitar rastro
-comida.goto(0,100) # posicion inicial
+
+posible_starts = range(-mp, mp - size, size) # Posibles coordenadas que puede tener la comida al aparecer
+
+comida.goto(random.choice(posible_starts),random.choice(posible_starts)) # posicion inicial
 
 # Cuerpo de la serpiente
 segmentos=[]
@@ -73,7 +97,7 @@ texto.write("Score:  0     High Score: 0", align = "center", font = ("Courier", 
 
 # -- # Funciones del juego # -- #
 
-PAUSE = False
+PAUSE = True
 
 #Direcciones variables 
 def arriba():
@@ -89,11 +113,13 @@ def espacio():
 	global PAUSE
 
 	if (PAUSE):
+		unpaused_musica()
 		PAUSE = False
-	elif (not PAUSE):
-	    PAUSE = True
-        
-        
+	else:
+		paused_musica()
+		PAUSE = True
+
+
 #Funciones de movimiento
 def mov():
 	if cabeza.direction == "up":
@@ -174,8 +200,8 @@ def discretizar_mundo(cabeza, snake, comida):
 	
 	comida_x, comida_y = in_matriz(comida)
 
-	print(f"Cabeza coords: {cabeza_x, cabeza_y}")
-	print(f"Comida coords: {comida_x, comida_y}")
+	#print(f"Cabeza coords: {cabeza_x, cabeza_y}")
+	#print(f"Comida coords: {comida_x, comida_y}")
 
 	game_state[cabeza_x][cabeza_y] = CAB
 	game_state[comida_x][comida_y] = COM
@@ -199,6 +225,19 @@ def discretizar_mundo(cabeza, snake, comida):
 
 	return (game_state[::-1], (cabeza_x, cabeza_y), (comida_x, comida_y))
 
+def corpse(GameState):
+
+	corpse_segments = set()
+
+	for cIn, column in enumerate(GameState):
+		for rIn, row in enumerate(column):
+
+			if GameState[cIn][rIn] == CUE:
+				corpse_segments.add((29 - cIn, rIn))
+	
+	#print(f"Corpse: {corpse_segments}")
+	return corpse_segments
+
 # Función que imprime a consola el estado del juego
 def print_game_state(GameState):
 
@@ -213,21 +252,59 @@ def print_game_state(GameState):
 
 # -------------- # IMPLEMENTACIÓN IA # ----------------------- #
 
+# Funcìòn que permite el teletransporte
+def tele_ia(coords):
+
+	cells = list()
+
+	# Borde izquierdo
+	if coords[0] == 0:
+		cells.append((29, coords[1]))
+	else:
+		cells.append((coords[0] - 1, coords[1]))
+
+	# Borde derecho
+	if coords[0] == 29:
+		cells.append((0, coords[1]))
+	else:
+		cells.append((coords[0] + 1, coords[1]))
+
+	# Borde superior
+	if coords[1] == 29:
+		cells.append( (coords[0], 0) )
+	else:
+		cells.append((coords[0], coords[1] + 1))
+
+	# Borde inferior
+	if coords[1] == 0:
+		cells.append((coords[0], 29))
+	else:
+		cells.append((coords[0], coords[1] - 1))
+
+
+	return cells[::][::-1]
+
+
 # Función que me devuelve los posibles movimientos dada una celda como cabeza
-def cell_neighbors(GameState, node, explored):
+def cell_neighbors(GameState, node, explored, corpse):
 
 	neighbors = list()
 
 	# node = node[::-1]
 
-	instant_cells = [(node[0] - 1, node[1]), (node[0] + 1, node[1]), (node[0], node[1] + 1), (node[0], node[1] - 1)]
+	instant_cells = tele_ia(node)
+
+	#print(f"Explored set: {explored}")
 
 	for cell in instant_cells:
 
-		if (GameState[cell[1]][cell[0]] == EMP) and (cell not in explored):
+		if (cell not in corpse) and (cell not in explored):
 			neighbors.append(cell)
+			explored.add(cell)
+		
 	
 	return neighbors
+
 
 # Función que implementa la el algoritmo de Djistkra (no sé cómo se escribe xD)
 def path(GameState, cab_coords, com_coords):
@@ -239,11 +316,15 @@ def path(GameState, cab_coords, com_coords):
 	pf.add(start)		# Agregamos el nodo inicial al PathFinder
 
 
+	explored = set()    # Set en donde guardaremos las celdas ya explorados
+						# para optimizar la búsqueda
+
+	corpse_segments = corpse(GameState)
+	#print(f"corpse: {corpse_segments}")
+	# input()
+
 	# Se empieza la búsqueda del path
 	while True:
-
-		explored = set()    # Set en donde guardaremos las celdas ya explorados
-							# para optimizar la búsqueda
 
 		# Si no hay nada en el path finder devolvemos None
 		if (pf.empty()):
@@ -251,6 +332,10 @@ def path(GameState, cab_coords, com_coords):
 
 		# Tomamos un nodo de la fila
 		node = pf.remove()
+
+		explored.add(node.coords)
+
+		# print(f"Explored cell:{node.coords}")
 
 		# Si el nodo el la meta, devolvemos el path que llegó a él
 		if (node.coords == goal):
@@ -269,14 +354,15 @@ def path(GameState, cab_coords, com_coords):
 		
 		# Si no hemos llegado a la meta, expandimos los path
 		else:
-			
-			explored.add(node.coords)
 
 			# Exploramos cada una de los posibles caminos por turno
-			for cell in cell_neighbors(GameState, node.coords, explored):
+			for cell in cell_neighbors(GameState, node.coords, explored, corpse_segments):
 				# Agregamos al PathFinder ese nodo para que sea explorado
 				# En siguientes iteraciones
+				#print(f"Added neigbor: {cell}")
 				pf.add(Nodo(cell, node))
+
+
 
 # Función que devuelve el movimiento a seguir por el snaje
 def IA_mov(cab_coords, cell_to_move):
@@ -289,28 +375,51 @@ def IA_mov(cab_coords, cell_to_move):
 
 	direction = None
 
-	if (x_mov == 1):
+	if (x_mov == 1) or (x_mov == -29):
 		direction = "right"
-	if (x_mov == -1): 
+	if (x_mov == -1) or (x_mov == 29): 
 		direction = "left"
-	if (y_mov == -1):
+	if (y_mov == -1) or (y_mov == 29):
 		direction = "down"
-	if (y_mov == 1):
+	if (y_mov == 1) or (y_mov == -29):
 		direction = "up"
 
 	return direction
 
+prev_mov = None
+
+# Función que encuentra el path y lo retorna
 def IA(game_state, cab_coors, com_coors, cabeza):
-	print(f"Head coords: [{cab_coors[0]}, {cab_coors[1]}]")
-	print(f"Food coords: [{com_coors[0]}, {com_coors[1]}]")
+
+	#print(f"Head coords: [{cab_coors[0]}, {cab_coors[1]}]")
+	#print(f"Food coords: [{com_coors[0]}, {com_coors[1]}]")
+
 	path_to_take = path(game_state, cab_coors, com_coors)
 
-	print(f"path found: {path_to_take}")
-	movToMake = [IA_mov(cab_coors, path_to_take[0]) if (path_to_take != []) else "stop"][0]
+	#if (path_to_take == None):
+		#print(f"No path found \n Head: {cab_coors} \n Food: {com_coors}")
+
+	#print(f"path found: {path_to_take}")
+
+	return path_to_take
+
+	
+	# input()
+
+# Función que hace el siguiente movimiento del path
+def IA_make_move(path, head):
+
+	global prev_mov
+
+	movToMake = [IA_mov(cab_coors, path[0]) if (path != [] and path != None) else prev_mov][0]
+
+	prev_mov = movToMake
+
 	cabeza.direction = movToMake
 
-	print(f"Move to make: {movToMake}")
-	input()
+	#print(f"Move to make: {movToMake}")
+
+	return (path[1::] if (path != None or path != []) else False)
 
 # -------------- # Dibujar cuadrilla # ---------------------- #
 
@@ -335,104 +444,119 @@ dibujar_cuadrilla(mp, size, cuadrado)
 
 turtle.update()
 
+IA_SEARCH_PATH = True
+IA_FOUND_PATH = None
 
 
-
-
+play_musica(Sonido)
 
 #los juegos corren en bucles
 while True:
-
-    # Colisiones bordes
-	
     
-    if cabeza.xcor() > mp - size:
-        cabeza.setx(-mp)
+	# Colisiones bordes
+	if cabeza.xcor() > mp - size:
+		cabeza.setx(-mp)
+	if cabeza.xcor() < -mp:
+		cabeza.setx(mp - size) 
+	if cabeza.ycor() > mp - size:
+		cabeza.sety(-mp)
+	if cabeza.ycor() < -mp:
+		cabeza.sety(mp - size)
 
-    if cabeza.xcor() < -mp:
-        cabeza.setx(mp - size) 
-
-    if cabeza.ycor() > mp - size:
-
-        cabeza.sety(-mp)
-
-    if cabeza.ycor() < -mp:
-
-        cabeza.sety(mp - size)
-
-    wn.update()
+	wn.update()
 	
-    if (not PAUSE):
+	if (not PAUSE):
 
         
-        ClearConsole()
+		ClearConsole()
 
-        wn.update()
 
+		wn.update()
+
+
+		create_segment_flag = False
+		
 		# Colisiones comida
+		if cabeza.distance(comida) < size: #tamaño de los objetos 20x20p
+			sonido(Beep)
+			x = random.choice(posible_starts)
+			y = random.choice(posible_starts)
 
-        if cabeza.distance(comida) < size: #tamaño de los objetos 20x20p
-            play()
-            posible_starts = range(-mp, mp - size, size)
-
-            x = random.choice(posible_starts)
-            y = random.choice(posible_starts)
-            comida.goto(x,y)
-
-            nuevo_segmento = turtle.Turtle() # objeto Turtle
-            nuevo_segmento.speed(0)
-            nuevo_segmento.shape("square") # forma de cuadrado
-            nuevo_segmento.color("blue")
-            nuevo_segmento.penup() # quitar rastro
-            segmentos.append(nuevo_segmento) # en una lista puedo guardar objetos, que putas
+			nuevo_segmento = turtle.Turtle() # objeto Turtle
+			nuevo_segmento.speed(0)
+			nuevo_segmento.shape("square") # forma de cuadrado
+			nuevo_segmento.color("blue")
+			nuevo_segmento.penup() # quitar rastro
+			segmentos.append(nuevo_segmento) # en una lista puedo guardar objetos, que putas
 
 			# aumenta marcador
+			while ( any((x == segment.xcor() and y == segment.ycor()) for segment in segmentos)): 
 
-            score+=1
+				x = random.choice(posible_starts)
+				y = random.choice(posible_starts)
 
-            if score > high_score:
-            	high_score=score
+			comida.goto(x,y)
 
-            texto.clear()
-            texto.write("Score:  {}     High Score: {}".format(score,high_score)
+			score+=1
+
+			if score > high_score:
+				high_score=score
+
+			texto.clear()
+			texto.write("Score:  {}     High Score: {}".format(score,high_score)
 											, align = "center", font = ("Courier", 24, "normal"))
+
 		# colision con el cuerpo
-        for segmento in segmentos:
-            if segmento.distance(cabeza) < size:
-            	time.sleep(1)
-            	cabeza.goto(0,0)
-            	cabeza.direction = "stop"
+		for segmento in segmentos:
+			if segmento.distance(cabeza) < size:
+				
+				time.sleep(1)
+				PAUSE = True
+				cabeza.goto(0,0)
+				cabeza.direction = "stop"
 
 				#esconder los segmentos
-            	for segmento in segmentos:
-            		segmento.goto(1000,1000)
+				for segmento in segmentos:
+					segmento.goto(1000,1000)
 
-            	segmentos.clear()
-
-            	score = 0
-            	texto.clear()
-            	texto.write("Score:  {}     High Score: {}".format(score,high_score)
+				segmentos.clear()
+ 
+				score = 0
+				texto.clear()
+				texto.write("Score:  {}     High Score: {}".format(score,high_score)
 											, align = "center", font = ("Courier", 24, "normal"))
 
 
-        time.sleep(posponer)
+		time.sleep(posponer)
 
-        totalSeg = len(segmentos) # cantidad de segmentos
-        for index in range(totalSeg -1, 0, -1): # iteracion en el intervalo [totalSeg -1, 0) reduciendo de 1 en 1
-            x = segmentos[index - 1].xcor() # posicion del segmento superior
-            y = segmentos[index - 1].ycor() 
-            segmentos[index].goto(x,y) # el segmento posterior toma la posicion del superior
+		totalSeg = len(segmentos) # cantidad de segmentos
+		for index in range(totalSeg -1, 0, -1): # iteracion en el intervalo [totalSeg -1, 0) reduciendo de 1 en 1
+			x = segmentos[index - 1].xcor() # posicion del segmento superior
+			y = segmentos[index - 1].ycor() 
+			segmentos[index].goto(x,y) # el segmento posterior toma la posicion del superior
 
-        if totalSeg>0:
-            x = cabeza.xcor() # la cabeza es el eje fundamental
-            y = cabeza.ycor()
-            segmentos[0].goto(x,y)
+		if totalSeg>0:
+			x = cabeza.xcor() # la cabeza es el eje fundamental
+			y = cabeza.ycor()
+			segmentos[0].goto(x,y)
+
 		
-
 		# Pedimos la matriz estado de juego junto con las coordenadas de la cabeza 
-        game_state, cab_coors, com_coors = discretizar_mundo(cabeza, segmentos, comida)
-        print_game_state(game_state)
+		game_state, cab_coors, com_coors = discretizar_mundo(cabeza, segmentos, comida)
+		#print_game_state(game_state)
 
-        #IA(game_state, cab_coors, com_coors, cabeza)
-        mov()
-turtle.done()
+		if (IA_SEARCH_PATH):
+
+			IA_FOUND_PATH = IA(game_state, cab_coors, com_coors, cabeza)
+			IA_SEARCH_PATH = False
+			
+		path_flag = IA_make_move(IA_FOUND_PATH, cab_coors)
+
+		if not path_flag:
+			IA_SEARCH_PATH = True
+		else:
+			IA_FOUND_PATH = path_flag
+
+		mov()
+
+stop_musica(Sonido)
