@@ -201,9 +201,9 @@ def corpse(GameState):
 		for rIn, row in enumerate(column):
 
 			if GameState[cIn][rIn] == CUE:
-				corpse_segments.add((rIn, 29 - cIn))
+				corpse_segments.add((29 - cIn, rIn))
 	
-	# print(f"Corpse: {corpse_segments}")
+	print(f"Corpse: {corpse_segments}")
 	return corpse_segments
 
 # Función que imprime a consola el estado del juego
@@ -254,7 +254,7 @@ def tele_ia(coords):
 
 
 # Función que me devuelve los posibles movimientos dada una celda como cabeza
-def cell_neighbors(GameState, node, explored):
+def cell_neighbors(GameState, node, explored, corpse):
 
 	neighbors = list()
 
@@ -264,11 +264,9 @@ def cell_neighbors(GameState, node, explored):
 
 	#print(f"Explored set: {explored}")
 
-	corpse_segments = corpse(GameState)
-
 	for cell in instant_cells:
 
-		if (cell not in corpse_segments) and (cell not in explored):
+		if (cell not in corpse) and (cell not in explored):
 			neighbors.append(cell)
 			explored.add(cell)
 		
@@ -288,6 +286,10 @@ def path(GameState, cab_coords, com_coords):
 
 	explored = set()    # Set en donde guardaremos las celdas ya explorados
 						# para optimizar la búsqueda
+
+	corpse_segments = corpse(GameState)
+	print(f"corpse: {corpse_segments}")
+	# input()
 
 	# Se empieza la búsqueda del path
 	while True:
@@ -322,7 +324,7 @@ def path(GameState, cab_coords, com_coords):
 		else:
 
 			# Exploramos cada una de los posibles caminos por turno
-			for cell in cell_neighbors(GameState, node.coords, explored):
+			for cell in cell_neighbors(GameState, node.coords, explored, corpse_segments):
 				# Agregamos al PathFinder ese nodo para que sea explorado
 				# En siguientes iteraciones
 				#print(f"Added neigbor: {cell}")
@@ -507,6 +509,7 @@ while True:
 		print_game_state(game_state)
 
 		if (IA_SEARCH_PATH):
+
 			IA_FOUND_PATH = IA(game_state, cab_coors, com_coors, cabeza)
 			IA_SEARCH_PATH = False
 			
